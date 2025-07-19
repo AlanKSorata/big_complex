@@ -1,6 +1,6 @@
-# Big Complex Number Calculator - 功能总结
+# Big Complex Number Calculator
 
-本项目是一个使用 Rust 语言实现的支持大数复杂运算的计算模块，提供了丰富的数学运算功能。
+一个使用 Rust 语言实现的支持大数复杂运算的计算模块，提供了丰富的数学运算功能。
 
 ## 核心模块
 
