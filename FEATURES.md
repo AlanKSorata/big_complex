@@ -1,155 +1,155 @@
-# Big Complex Number Calculator - 功能总结
+# Big Complex Number Calculator - Feature Summary
 
-本项目是一个使用 Rust 语言实现的支持大数复杂运算的计算模块，提供了丰富的数学运算功能。
+This project is a calculation module implemented in Rust language that supports large and complex arithmetic operations, offering a rich set of mathematical operation functions.
 
-## 核心模块
+## Core Modules
 
-### BigInt - 大整数模块
+### BigInt - Big Integer Module
 
-#### 基础功能
+#### Basic Functions
 
-- ✅ 大整数的创建和基本运算（加、减、乘、除、取模）
-- ✅ 字符串解析和显示
-- ✅ 字节序列转换
-- ✅ 符号检测和绝对值计算
-- ✅ 比较运算
+- ✅ Creation and basic operations (addition, subtraction, multiplication, division, modulo) of big integers.
+- ✅ String parsing and display.
+- ✅ Conversion to and from byte sequences.
+- ✅ Sign detection and absolute value calculation.
+- ✅ Comparison operations.
 
-#### 数学运算功能
+#### Mathematical Operation Functions
 
-- ✅ 幂运算 (`pow`)
-- ✅ 平方根计算 (`sqrt`)
-- ✅ 最大公约数 (`gcd`)
-- ✅ 最小公倍数 (`lcm`)
-- ✅ 模幂运算 (`mod_pow`)
-- ✅ 模逆运算 (`mod_inv`)
+- ✅ Power operation (`pow`).
+- ✅ Square root calculation (`sqrt`).
+- ✅ Greatest common divisor (`gcd`).
+- ✅ Least common multiple (`lcm`).
+- ✅ Modular exponentiation (`mod_pow`).
+- ✅ Modular inverse (`mod_inv`).
 
-#### 新增功能
+#### New Features
 
-- ✅ **阶乘计算** (`factorial`) - 计算 n!
-- ✅ **素数检测** (`is_prime`) - 判断是否为素数
-- ✅ **下一个素数** (`next_prime`) - 找到大于当前数的最小素数
-- ✅ **二进制操作**:
-  - `bit_length()` - 获取二进制位长度
-  - `count_ones()` - 计算二进制中 1 的个数
-  - `trailing_zeros()` - 计算尾随零的个数
-  - `is_power_of_two()` - 判断是否为 2 的幂
-  - `next_power_of_two()` - 获取下一个 2 的幂
+- ✅ **Factorial calculation** (`factorial`) - Calculate n!.
+- ✅ **Prime number detection** (`is_prime`) - Determine whether a number is prime.
+- ✅ **Next prime number** (`next_prime`) - Find the smallest prime number greater than the current number.
+- ✅ **Binary operations**:
+  - `bit_length()` - Get the binary bit length.
+  - `count_ones()` - Count the number of 1s in the binary representation.
+  - `trailing_zeros()` - Count the number of trailing zeros.
+  - `is_power_of_two()` - Determine whether a number is a power of 2.
+  - `next_power_of_two()` - Get the next power of 2.
 
-### BigComplex - 大复数模块
+### BigComplex - Big Complex Number Module
 
-#### 基础功能
+#### Basic Functions
 
-- ✅ 复数的创建和基本运算（加、减、乘、除）
-- ✅ 实部和虚部访问
-- ✅ 复数共轭 (`conjugate`)
-- ✅ 模长平方 (`magnitude_squared`)
-- ✅ 缩放操作 (`scale`)
-- ✅ 复数幂运算 (`pow`)
+- ✅ Creation and basic operations (addition, subtraction, multiplication, division) of complex numbers.
+- ✅ Access to the real and imaginary parts.
+- ✅ Complex conjugate (`conjugate`).
+- ✅ Squared magnitude (`magnitude_squared`).
+- ✅ Scaling operation (`scale`).
+- ✅ Complex number power operation (`pow`).
 
-#### 几何和极坐标功能
+#### Geometric and Polar Coordinate Functions
 
-- ✅ **模长计算** (`magnitude`) - 计算复数的模长
-- ✅ **极坐标构造** (`from_polar`) - 从极坐标创建复数
-- ✅ **象限判断** (`arg_quadrant`) - 判断复数所在象限
-- ✅ **旋转操作**:
-  - `rotate_90()` - 逆时针旋转 90 度
-  - `rotate_180()` - 旋转 180 度
-  - `rotate_270()` - 逆时针旋转 270 度
+- ✅ **Magnitude calculation** (`magnitude`) - Calculate the magnitude of a complex number.
+- ✅ **Polar coordinate construction** (`from_polar`) - Create a complex number from polar coordinates.
+- ✅ **Quadrant determination** (`arg_quadrant`) - Determine the quadrant in which a complex number lies.
+- ✅ **Rotation operations**:
+  - `rotate_90()` - Rotate counter - clockwise by 90 degrees.
+  - `rotate_180()` - Rotate by 180 degrees.
+  - `rotate_270()` - Rotate counter - clockwise by 270 degrees.
 
-#### 高级数学运算
+#### Advanced Mathematical Operations
 
-- ✅ **n 次方根** (`nth_root`) - 计算复数的 n 次方根
-- ✅ **自然对数近似** (`ln_approx`) - 复数自然对数的简化计算
-- ✅ **指数函数近似** (`exp_approx`) - 复数指数函数的简化计算
+- ✅ **nth root** (`nth_root`) - Calculate the nth root of a complex number.
+- ✅ **Natural logarithm approximation** (`ln_approx`) - Simplified calculation of the natural logarithm of a complex number.
+- ✅ **Exponential function approximation** (`exp_approx`) - Simplified calculation of the exponential function of a complex number.
 
-## 测试覆盖
+## Test Coverage
 
-### 单元测试
+### Unit Tests
 
-- ✅ BigInt: 18 个测试函数，覆盖所有功能
-- ✅ BigComplex: 17 个测试函数，覆盖所有功能
+- ✅ BigInt: 18 test functions, covering all functions.
+- ✅ BigComplex: 17 test functions, covering all functions.
 
-### 集成测试
+### Integration Tests
 
-- ✅ 12 个集成测试，包括：
-  - 大数运算测试
-  - 复数运算链测试
-  - 多项式求值测试
-  - 数学性质验证测试
-  - 新功能综合测试
+- ✅ 12 integration tests, including:
+  - Large number operation tests.
+  - Complex number operation chain tests.
+  - Polynomial evaluation tests.
+  - Mathematical property verification tests.
+  - Comprehensive tests of new features.
 
-## 性能特点
+## Performance Characteristics
 
-- ✅ 支持任意精度的大整数运算
-- ✅ 高效的算法实现（如素数检测使用试除法优化）
-- ✅ 内存安全的 Rust 实现
-- ✅ 零拷贝的引用操作支持
+- ✅ Supports arbitrary - precision big integer operations.
+- ✅ Efficient algorithm implementation (e.g., optimized trial division for prime number detection).
+- ✅ Memory - safe Rust implementation.
+- ✅ Zero - copy reference operations are supported.
 
-## 使用示例
+## Usage Examples
 
 ```rust
 use big_complex::{BigInt, BigComplex};
 
-// 大整数运算
+// Big integer operations
 let n = BigInt::new(10);
 println!("10! = {}", n.factorial().unwrap());
 
 let num = BigInt::new(97);
 println!("{} is prime: {}", num, num.is_prime());
 
-// 复数运算
+// Complex number operations
 let z = BigComplex::from_i64(3, 4);
 println!("Magnitude: {}", z.magnitude());
 println!("Rotated 90°: {}", z.rotate_90());
 
-// 高级运算
+// Advanced operations
 let roots = BigComplex::from_i64(16, 0).nth_root(2);
 println!("Square roots: {:?}", roots);
 ```
 
-## 编译和运行
+## Compilation and Execution
 
 ```bash
-# 运行所有测试
+# Run all tests
 cargo test
 
-# 运行示例程序
+# Run the example program
 cargo run --example usage
 
-# 运行特定测试
+# Run specific tests
 cargo test test_big_int_factorial
 cargo test test_big_complex_rotation
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 src/
-├── lib.rs          # 模块导出
-├── big_int.rs      # 大整数实现
-└── big_complex.rs  # 大复数实现
+├── lib.rs          # Module export
+├── big_int.rs      # Big integer implementation
+└── big_complex.rs  # Big complex number implementation
 
 tests/
-└── integration_tests.rs  # 集成测试
+└── integration_tests.rs  # Integration tests
 
 examples/
-└── usage.rs        # 使用示例
+└── usage.rs        # Usage example
 ```
 
-## 依赖项
+## Dependencies
 
-- `num-bigint` - 大整数底层实现
-- `num-traits` - 数值特征
-- `num-complex` - 复数支持
-- `num-integer` - 整数运算
+- `num-bigint` - Underlying implementation of big integers.
+- `num-traits` - Numerical traits.
+- `num-complex` - Complex number support.
+- `num-integer` - Integer operations.
 
-## 总结
+## Summary
 
-本项目成功实现了一个功能完整的大数复杂运算计算模块，包含：
+This project has successfully implemented a fully - functional large and complex arithmetic calculation module, including:
 
-- **28 个单元测试** 全部通过
-- **12 个集成测试** 全部通过
-- **15 个新增功能** 并配有相应测试
-- **完整的示例程序** 展示所有功能
+- **28 unit tests** all passed.
+- **12 integration tests** all passed.
+- **15 new features** with corresponding tests.
+- **A complete example program** demonstrating all functions.
 
-每个新功能的实现都遵循了"实现-测试"的开发模式，确保代码质量和功能正确性。
+The implementation of each new feature follows the "implement - test" development model to ensure code quality and function correctness.
