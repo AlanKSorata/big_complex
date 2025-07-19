@@ -1,5 +1,7 @@
 # Big Complex Number Calculator
 
+[Chinese Version](./README-zh.md)
+
 A calculation module implemented in Rust language that supports large number complex operations, providing a rich set of mathematical operation functions.
 
 ## Core Modules
