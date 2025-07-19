@@ -1,0 +1,17 @@
+[package]
+name = "big_complex"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "A Library for Complicated Arithmetic with Big Complex Numbers"
+repository = "https://github.com/AlanKSorata/big_complex"
+
+[dependencies]
+num-bigint = "0.4"
+num-traits = "0.2"
+num-complex = "0.4"
+num-integer = "0.1"
+
+[dev-dependencies]
+proptest = "1.0"
+rand = "0.8"
