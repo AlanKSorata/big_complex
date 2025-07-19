@@ -172,7 +172,7 @@ impl BigInt {
 
     pub fn count_ones(&self) -> u64 {
         if self.is_negative() {
-            return 0; // 对于负数，我们不计算1的个数
+            return 0; // For negative numbers, we don't count ones
         }
 
         let (_, bytes) = self.to_bytes_be();
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     fn test_big_int_binary_operations() {
-        // 测试位长度
+        // Test bit length
         assert_eq!(BigInt::new(0).bit_length(), 0);
         assert_eq!(BigInt::new(1).bit_length(), 1);
         assert_eq!(BigInt::new(2).bit_length(), 2);
@@ -539,15 +539,15 @@ mod tests {
         assert_eq!(BigInt::new(8).bit_length(), 4); // 1000 in binary
         assert_eq!(BigInt::new(255).bit_length(), 8); // 11111111 in binary
 
-        // 测试1的个数
+        // Test count of ones
         assert_eq!(BigInt::new(0).count_ones(), 0);
         assert_eq!(BigInt::new(1).count_ones(), 1);
         assert_eq!(BigInt::new(3).count_ones(), 2); // 11 in binary
         assert_eq!(BigInt::new(7).count_ones(), 3); // 111 in binary
         assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
-        assert_eq!(BigInt::new(-5).count_ones(), 0); // 负数返回0
+        assert_eq!(BigInt::new(-5).count_ones(), 0); // Negative numbers return 0
 
-        // 测试尾随零
+        // Test trailing zeros
         assert_eq!(BigInt::new(0).trailing_zeros(), None);
         assert_eq!(BigInt::new(1).trailing_zeros(), Some(0)); // 1
         assert_eq!(BigInt::new(2).trailing_zeros(), Some(1)); // 10
@@ -555,7 +555,7 @@ mod tests {
         assert_eq!(BigInt::new(8).trailing_zeros(), Some(3)); // 1000
         assert_eq!(BigInt::new(12).trailing_zeros(), Some(2)); // 1100
 
-        // 测试是否为2的幂
+        // Test if power of two
         assert!(!BigInt::new(0).is_power_of_two());
         assert!(BigInt::new(1).is_power_of_two());
         assert!(BigInt::new(2).is_power_of_two());
@@ -566,7 +566,7 @@ mod tests {
         assert!(BigInt::new(16).is_power_of_two());
         assert!(!BigInt::new(-4).is_power_of_two());
 
-        // 测试下一个2的幂
+        // Test next power of two
         assert_eq!(BigInt::new(0).next_power_of_two().to_string(), "1");
         assert_eq!(BigInt::new(1).next_power_of_two().to_string(), "1");
         assert_eq!(BigInt::new(2).next_power_of_two().to_string(), "2");

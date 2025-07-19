@@ -127,7 +127,7 @@ impl BigComplex {
     }
 
     pub fn from_polar(r: &BigInt, theta_approx: i32) -> Self {
-        // 简化的极坐标转换，使用整数近似角度
+        // Simplified polar coordinate conversion using integer angle approximation
         // theta_approx: 0=0°, 1=90°, 2=180°, 3=270°
         match theta_approx % 4 {
             0 => BigComplex::new(r.clone(), BigInt::zero()), // 0°
@@ -139,36 +139,36 @@ impl BigComplex {
     }
 
     pub fn arg_quadrant(&self) -> Option<i32> {
-        // 返回复数所在的象限 (0-3)
+        // Returns the quadrant of the complex number (0-3)
         if self.is_zero() {
             return None;
         }
 
         match (self.real.is_positive(), self.imag.is_positive()) {
-            (true, true) => Some(0),   // 第一象限
-            (false, true) => Some(1),  // 第二象限
-            (false, false) => Some(2), // 第三象限
-            (true, false) => Some(3),  // 第四象限
+            (true, true) => Some(0),   // First quadrant
+            (false, true) => Some(1),  // Second quadrant
+            (false, false) => Some(2), // Third quadrant
+            (true, false) => Some(3),  // Fourth quadrant
         }
     }
 
     pub fn rotate_90(&self) -> Self {
-        // 逆时针旋转90度: (a+bi) * i = -b + ai
+        // Rotate 90 degrees counterclockwise: (a+bi) * i = -b + ai
         BigComplex::new(-&self.imag, self.real.clone())
     }
 
     pub fn rotate_180(&self) -> Self {
-        // 旋转180度: (a+bi) * (-1) = -a - bi
+        // Rotate 180 degrees: (a+bi) * (-1) = -a - bi
         BigComplex::new(-&self.real, -&self.imag)
     }
 
     pub fn rotate_270(&self) -> Self {
-        // 逆时针旋转270度: (a+bi) * (-i) = b - ai
+        // Rotate 270 degrees counterclockwise: (a+bi) * (-i) = b - ai
         BigComplex::new(self.imag.clone(), -&self.real)
     }
 
     pub fn nth_root(&self, n: u32) -> Vec<Self> {
-        // 计算复数的n次方根（简化版本，只返回主根）
+        // Calculate the nth roots of a complex number (simplified version, returns only principal roots)
         if n == 0 {
             return vec![];
         }
@@ -182,7 +182,7 @@ impl BigComplex {
         }
 
         if n == 2 {
-            // 平方根的简化计算
+            // Simplified square root calculation
             let mag_squared = self.magnitude_squared();
             let _mag = mag_squared.sqrt().unwrap_or_else(|| BigInt::zero());
 
@@ -201,23 +201,23 @@ impl BigComplex {
             }
         }
 
-        // 对于其他情况，返回一个近似根
+        // For other cases, return an approximate root
         vec![BigComplex::new(BigInt::one(), BigInt::zero())]
     }
 
     pub fn ln_approx(&self) -> Option<Self> {
-        // 自然对数的简化近似（仅用于演示）
+        // Simplified natural logarithm approximation (for demonstration purposes)
         if self.is_zero() {
             return None;
         }
 
         if self.is_real() && self.real.is_positive() {
-            // 对于正实数，ln(x) ≈ 整数部分的近似
+            // For positive real numbers, ln(x) ≈ integer approximation
             if self.real == BigInt::one() {
                 return Some(BigComplex::zero());
             }
 
-            // 简化的对数近似
+            // Simplified logarithm approximation
             let mut approx = BigInt::zero();
             let mut temp = self.real.clone();
 
@@ -229,18 +229,18 @@ impl BigComplex {
             return Some(BigComplex::new(approx, BigInt::zero()));
         }
 
-        // 对于复数，返回简化结果
+        // For complex numbers, return simplified result
         Some(BigComplex::new(BigInt::zero(), BigInt::one()))
     }
 
     pub fn exp_approx(&self) -> Self {
-        // 指数函数的简化近似（仅用于演示）
+        // Simplified exponential function approximation (for demonstration purposes)
         if self.is_zero() {
             return BigComplex::one();
         }
 
         if self.is_real() {
-            // e^x 的简化近似
+            // Simplified approximation of e^x
             if self.real.is_zero() {
                 return BigComplex::one();
             }
@@ -248,7 +248,7 @@ impl BigComplex {
             let mut result = BigComplex::one();
             let mut term = BigComplex::one();
 
-            // 计算前几项泰勒级数
+            // Calculate first few terms of Taylor series
             for i in 1..=10 {
                 term = term * self.clone() / BigComplex::new(BigInt::new(i), BigInt::zero());
                 result = result + term.clone();
@@ -260,7 +260,7 @@ impl BigComplex {
 
             result
         } else {
-            // 对于复数，返回简化结果
+            // For complex numbers, return simplified result
             BigComplex::new(BigInt::one(), BigInt::one())
         }
     }
@@ -588,7 +588,7 @@ mod tests {
     fn test_big_complex_polar() {
         let r = BigInt::new(5);
 
-        // 测试四个基本方向
+        // Test four basic directions
         let z0 = BigComplex::from_polar(&r, 0); // 0°
         assert_eq!(z0.real().to_string(), "5");
         assert_eq!(z0.imag().to_string(), "0");
@@ -605,7 +605,7 @@ mod tests {
         assert_eq!(z3.real().to_string(), "0");
         assert_eq!(z3.imag().to_string(), "-5");
 
-        // 测试角度循环
+        // Test angle cycling
         let z4 = BigComplex::from_polar(&r, 4); // 360° = 0°
         assert_eq!(z4.real().to_string(), "5");
         assert_eq!(z4.imag().to_string(), "0");
@@ -613,19 +613,19 @@ mod tests {
 
     #[test]
     fn test_big_complex_quadrant() {
-        let z1 = BigComplex::from_i64(3, 4); // 第一象限
+        let z1 = BigComplex::from_i64(3, 4); // First quadrant
         assert_eq!(z1.arg_quadrant(), Some(0));
 
-        let z2 = BigComplex::from_i64(-3, 4); // 第二象限
+        let z2 = BigComplex::from_i64(-3, 4); // Second quadrant
         assert_eq!(z2.arg_quadrant(), Some(1));
 
-        let z3 = BigComplex::from_i64(-3, -4); // 第三象限
+        let z3 = BigComplex::from_i64(-3, -4); // Third quadrant
         assert_eq!(z3.arg_quadrant(), Some(2));
 
-        let z4 = BigComplex::from_i64(3, -4); // 第四象限
+        let z4 = BigComplex::from_i64(3, -4); // Fourth quadrant
         assert_eq!(z4.arg_quadrant(), Some(3));
 
-        let z0 = BigComplex::from_i64(0, 0); // 原点
+        let z0 = BigComplex::from_i64(0, 0); // Origin
         assert_eq!(z0.arg_quadrant(), None);
     }
 
@@ -633,22 +633,22 @@ mod tests {
     fn test_big_complex_rotation() {
         let z = BigComplex::from_i64(1, 0); // 1 + 0i
 
-        // 旋转90度: 1 -> i
+        // Rotate 90 degrees: 1 -> i
         let z90 = z.rotate_90();
         assert_eq!(z90.real().to_string(), "0");
         assert_eq!(z90.imag().to_string(), "1");
 
-        // 旋转180度: 1 -> -1
+        // Rotate 180 degrees: 1 -> -1
         let z180 = z.rotate_180();
         assert_eq!(z180.real().to_string(), "-1");
         assert_eq!(z180.imag().to_string(), "0");
 
-        // 旋转270度: 1 -> -i
+        // Rotate 270 degrees: 1 -> -i
         let z270 = z.rotate_270();
         assert_eq!(z270.real().to_string(), "0");
         assert_eq!(z270.imag().to_string(), "-1");
 
-        // 测试复杂数字的旋转
+        // Test rotation of complex numbers
         let w = BigComplex::from_i64(3, 4); // 3 + 4i
         let w90 = w.rotate_90(); // -4 + 3i
         assert_eq!(w90.real().to_string(), "-4");
@@ -657,7 +657,7 @@ mod tests {
 
     #[test]
     fn test_big_complex_nth_root() {
-        // 测试平方根
+        // Test square roots
         let z1 = BigComplex::from_i64(4, 0); // 4 + 0i
         let roots = z1.nth_root(2);
         assert_eq!(roots.len(), 2);
@@ -666,7 +666,7 @@ mod tests {
         assert_eq!(roots[1].real().to_string(), "-2");
         assert_eq!(roots[1].imag().to_string(), "0");
 
-        // 测试负数的平方根
+        // Test square roots of negative numbers
         let z2 = BigComplex::from_i64(-4, 0); // -4 + 0i
         let roots2 = z2.nth_root(2);
         assert_eq!(roots2.len(), 2);
@@ -675,13 +675,13 @@ mod tests {
         assert_eq!(roots2[1].real().to_string(), "0");
         assert_eq!(roots2[1].imag().to_string(), "-2");
 
-        // 测试零的根
+        // Test roots of zero
         let zero = BigComplex::zero();
         let zero_roots = zero.nth_root(3);
         assert_eq!(zero_roots.len(), 1);
         assert!(zero_roots[0].is_zero());
 
-        // 测试一次根
+        // Test first root
         let z3 = BigComplex::from_i64(5, 7);
         let roots3 = z3.nth_root(1);
         assert_eq!(roots3.len(), 1);
@@ -690,22 +690,22 @@ mod tests {
 
     #[test]
     fn test_big_complex_ln_approx() {
-        // 测试ln(1) = 0
+        // Test ln(1) = 0
         let one = BigComplex::from_i64(1, 0);
         let ln_one = one.ln_approx().unwrap();
         assert!(ln_one.is_zero());
 
-        // 测试正实数的对数近似
-        let z1 = BigComplex::from_i64(8, 0); // ln(8) ≈ 3 (简化近似)
+        // Test logarithm approximation for positive real numbers
+        let z1 = BigComplex::from_i64(8, 0); // ln(8) ≈ 3 (simplified approximation)
         let ln_z1 = z1.ln_approx().unwrap();
         assert_eq!(ln_z1.real().to_string(), "3");
         assert_eq!(ln_z1.imag().to_string(), "0");
 
-        // 测试零的对数（应该返回None）
+        // Test logarithm of zero (should return None)
         let zero = BigComplex::zero();
         assert_eq!(zero.ln_approx(), None);
 
-        // 测试复数的对数（简化结果）
+        // Test logarithm of complex numbers (simplified result)
         let z2 = BigComplex::from_i64(1, 1);
         let ln_z2 = z2.ln_approx().unwrap();
         assert_eq!(ln_z2.real().to_string(), "0");
@@ -714,19 +714,19 @@ mod tests {
 
     #[test]
     fn test_big_complex_exp_approx() {
-        // 测试exp(0) = 1
+        // Test exp(0) = 1
         let zero = BigComplex::zero();
         let exp_zero = zero.exp_approx();
         assert_eq!(exp_zero.real().to_string(), "1");
         assert_eq!(exp_zero.imag().to_string(), "0");
 
-        // 测试实数的指数近似
+        // Test exponential approximation for real numbers
         let z1 = BigComplex::from_i64(1, 0);
         let exp_z1 = z1.exp_approx();
-        // 由于是简化近似，我们只检查结果不为零
+        // Since it's a simplified approximation, we only check that the result is not zero
         assert!(!exp_z1.is_zero());
 
-        // 测试复数的指数（简化结果）
+        // Test exponential of complex numbers (simplified result)
         let z2 = BigComplex::from_i64(0, 1);
         let exp_z2 = z2.exp_approx();
         assert_eq!(exp_z2.real().to_string(), "1");
