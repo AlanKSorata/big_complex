@@ -520,7 +520,11 @@ impl BigComplex {
 
             // Calculate first few terms of Taylor series
             for i in 1..=10 {
-                term = term * self.clone() / BigComplex::new(BigInt::new(i), BigInt::zero());
+                let divisor = BigComplex::new(BigInt::new(i), BigInt::zero());
+                if divisor.is_zero() {
+                    break;
+                }
+                term = term * self.clone() / divisor;
                 result = result + term.clone();
 
                 if term.magnitude_squared() < BigInt::one() {
