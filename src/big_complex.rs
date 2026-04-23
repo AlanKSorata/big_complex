@@ -452,49 +452,44 @@ impl BigComplex {
         None
     }
 
-    /// Returns a simplified approximation of the natural logarithm.
+    /// Returns an integer approximation of the natural logarithm.
     ///
-    /// **Note:** This is a demonstration implementation with limited precision.
-    /// For positive real numbers, it returns a rough integer approximation.
-    /// For complex numbers and non-positive reals, returns `None`.
+    /// This returns ⌊log₂(n)⌋, which is the position of the most significant bit.
+    /// This is useful for estimating the magnitude of large numbers.
     ///
-    /// Returns `None` for zero and negative numbers, and for complex numbers.
+    /// - For 1, returns 0 (since log₂(1) = 0)
+    /// - For values between 2ᵏ and 2ᵏ⁺¹-1, returns k
+    /// - Returns `None` for zero, negative numbers, and complex numbers
     ///
     /// # Examples
     ///
     /// ```
     /// use big_complex::BigComplex;
     ///
-    /// // ln(1) = 0
+    /// // log₂(1) = 0
     /// let z = BigComplex::from_i64(1, 0);
     /// assert!(z.ln_approx().unwrap().is_zero());
+    ///
+    /// // log₂(8) = 3, so ln_approx returns 3
+    /// let z = BigComplex::from_i64(8, 0);
+    /// assert_eq!(z.ln_approx().unwrap().to_string(), "3");
     ///
     /// // Complex numbers return None
     /// let complex = BigComplex::from_i64(1, 1);
     /// assert!(complex.ln_approx().is_none());
     /// ```
     pub fn ln_approx(&self) -> Option<Self> {
-        // Simplified natural logarithm approximation (for demonstration purposes)
         if self.is_zero() {
             return None;
         }
 
         if self.is_real() && self.real.is_positive() {
-            // For positive real numbers, ln(x) ≈ integer approximation
-            if self.real == BigInt::one() {
-                return Some(BigComplex::zero());
+            // Return floor(log₂(n)) which equals bit_length - 1
+            let bit_len = self.real.bit_length();
+            if bit_len == 0 {
+                return None;
             }
-
-            // Simplified logarithm approximation
-            let mut approx = BigInt::zero();
-            let mut temp = self.real.clone();
-
-            while temp > BigInt::one() {
-                temp = temp / BigInt::new(2);
-                approx = approx + BigInt::one();
-            }
-
-            return Some(BigComplex::new(approx, BigInt::zero()));
+            return Some(BigComplex::new(BigInt::new((bit_len as i64) - 1), BigInt::zero()));
         }
 
         // For complex numbers, return None as we cannot compute ln accurately
