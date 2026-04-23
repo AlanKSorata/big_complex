@@ -254,15 +254,22 @@ impl BigComplex {
             .unwrap_or_else(BigInt::zero)
     }
 
-    /// Creates a complex number from polar coordinates (simplified).
+    /// Creates a complex number from polar coordinates with discrete angles.
     ///
-    /// This is a simplified version that only supports four discrete angles:
-    /// - 0: 0° (positive real axis)
-    /// - 1: 90° (positive imaginary axis)
-    /// - 2: 180° (negative real axis)
-    /// - 3: 270° (negative imaginary axis)
+    /// This is designed for integer-based applications where only the four
+    /// cardinal directions (0°, 90°, 180°, 270°) are needed. For arbitrary
+    /// angles, floating-point based complex number libraries should be used.
     ///
-    /// The angle wraps around modulo 4.
+    /// # Arguments
+    ///
+    /// * `r` - The magnitude (radius), must be non-negative for meaningful results
+    /// * `quadrant` - The angle as a quadrant index:
+    ///   - 0: 0° (positive real axis)
+    ///   - 1: 90° (positive imaginary axis)
+    ///   - 2: 180° (negative real axis)
+    ///   - 3: 270° (negative imaginary axis)
+    ///
+    /// The quadrant wraps around modulo 4.
     ///
     /// # Examples
     ///
@@ -272,11 +279,13 @@ impl BigComplex {
     /// // r=5, θ=90° → 0+5i
     /// let z = BigComplex::from_polar(&BigInt::new(5), 1);
     /// assert_eq!(z.to_string(), "5i");
+    ///
+    /// // r=3, θ=180° → -3+0i
+    /// let z = BigComplex::from_polar(&BigInt::new(3), 2);
+    /// assert_eq!(z.to_string(), "-3");
     /// ```
-    pub fn from_polar(r: &BigInt, theta_approx: i32) -> Self {
-        // Simplified polar coordinate conversion using integer angle approximation
-        // theta_approx: 0=0°, 1=90°, 2=180°, 3=270°
-        match theta_approx % 4 {
+    pub fn from_polar(r: &BigInt, quadrant: i32) -> Self {
+        match quadrant.rem_euclid(4) {
             0 => BigComplex::new(r.clone(), BigInt::zero()), // 0°
             1 => BigComplex::new(BigInt::zero(), r.clone()), // 90°
             2 => BigComplex::new(-r, BigInt::zero()),        // 180°
