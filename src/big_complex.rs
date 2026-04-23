@@ -447,9 +447,9 @@ impl BigComplex {
     ///
     /// **Note:** This is a demonstration implementation with limited precision.
     /// For positive real numbers, it returns a rough integer approximation.
-    /// For complex numbers, it returns a placeholder value.
+    /// For complex numbers and non-positive reals, returns `None`.
     ///
-    /// Returns `None` for zero.
+    /// Returns `None` for zero and negative numbers, and for complex numbers.
     ///
     /// # Examples
     ///
@@ -459,6 +459,10 @@ impl BigComplex {
     /// // ln(1) = 0
     /// let z = BigComplex::from_i64(1, 0);
     /// assert!(z.ln_approx().unwrap().is_zero());
+    ///
+    /// // Complex numbers return None
+    /// let complex = BigComplex::from_i64(1, 1);
+    /// assert!(complex.ln_approx().is_none());
     /// ```
     pub fn ln_approx(&self) -> Option<Self> {
         // Simplified natural logarithm approximation (for demonstration purposes)
@@ -484,8 +488,9 @@ impl BigComplex {
             return Some(BigComplex::new(approx, BigInt::zero()));
         }
 
-        // For complex numbers, return simplified result
-        Some(BigComplex::new(BigInt::zero(), BigInt::one()))
+        // For complex numbers, return None as we cannot compute ln accurately
+        // without floating-point arithmetic
+        None
     }
 
     /// Returns a simplified approximation of the exponential function.
@@ -1012,11 +1017,9 @@ mod tests {
         let zero = BigComplex::zero();
         assert_eq!(zero.ln_approx(), None);
 
-        // Test logarithm of complex numbers (simplified result)
+        // Test logarithm of complex numbers (should return None)
         let z2 = BigComplex::from_i64(1, 1);
-        let ln_z2 = z2.ln_approx().unwrap();
-        assert_eq!(ln_z2.real().to_string(), "0");
-        assert_eq!(ln_z2.imag().to_string(), "1");
+        assert_eq!(z2.ln_approx(), None);
     }
 
     #[test]
