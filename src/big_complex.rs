@@ -497,11 +497,15 @@ impl BigComplex {
         None
     }
 
-    /// Returns a simplified approximation of the exponential function.
+    /// Returns an approximation of the exponential function using Taylor series.
     ///
-    /// **Note:** This is a demonstration implementation using a truncated
-    /// Taylor series expansion. Accuracy decreases for larger values.
-    /// Only supports real numbers; returns `None` for complex numbers.
+    /// Uses the Taylor series expansion: eˣ = Σ(xⁿ/n!) for n=0 to ∞
+    ///
+    /// **Precision Notes:**
+    /// - For small values (|x| < 10), provides reasonable approximation
+    /// - For larger values, accuracy decreases due to integer truncation
+    /// - Computes up to 10 terms or until terms become negligible
+    /// - Returns `None` for complex numbers (not supported)
     ///
     /// # Examples
     ///
@@ -512,6 +516,11 @@ impl BigComplex {
     /// // exp(0) = 1
     /// let z = BigComplex::zero();
     /// assert_eq!(z.exp_approx().unwrap().to_string(), "1");
+    ///
+    /// // exp(1) ≈ 2 (truncated from e ≈ 2.718...)
+    /// let z = BigComplex::from_i64(1, 0);
+    /// let result = z.exp_approx().unwrap();
+    /// assert!(result.real() > &BigComplex::zero().real());
     ///
     /// // Complex numbers return None
     /// let complex = BigComplex::from_i64(1, 1);
