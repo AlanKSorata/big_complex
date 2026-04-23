@@ -376,23 +376,52 @@ impl Div for BigComplex {
     }
 }
 
-impl<'a> Div for &'a BigComplex {
-    type Output = BigComplex;
+impl Div<&BigComplex> for BigComplex {
+    type Output = Self;
 
-    fn div(self, other: Self) -> BigComplex {
-        let denominator =
-            other.real.clone() * other.real.clone() + other.imag.clone() * other.imag.clone();
+    fn div(self, other: &BigComplex) -> Self {
+        let denominator = &other.real * &other.real + &other.imag * &other.imag;
 
         if denominator.is_zero() {
             panic!("Division by zero complex number");
         }
 
-        let real = (self.real.clone() * other.real.clone()
-            + self.imag.clone() * other.imag.clone())
-            / denominator.clone();
-        let imag = (self.imag.clone() * other.real.clone()
-            - self.real.clone() * other.imag.clone())
-            / denominator;
+        let real = (&self.real * &other.real + &self.imag * &other.imag) / denominator.clone();
+        let imag = (&self.imag * &other.real - &self.real * &other.imag) / denominator;
+
+        BigComplex { real, imag }
+    }
+}
+
+impl Div<BigComplex> for &BigComplex {
+    type Output = BigComplex;
+
+    fn div(self, other: BigComplex) -> BigComplex {
+        let denominator = &other.real * &other.real + &other.imag * &other.imag;
+
+        if denominator.is_zero() {
+            panic!("Division by zero complex number");
+        }
+
+        let real = (&self.real * &other.real + &self.imag * &other.imag) / denominator.clone();
+        let imag = (&self.imag * &other.real - &self.real * &other.imag) / denominator;
+
+        BigComplex { real, imag }
+    }
+}
+
+impl Div<&BigComplex> for &BigComplex {
+    type Output = BigComplex;
+
+    fn div(self, other: &BigComplex) -> BigComplex {
+        let denominator = &other.real * &other.real + &other.imag * &other.imag;
+
+        if denominator.is_zero() {
+            panic!("Division by zero complex number");
+        }
+
+        let real = (&self.real * &other.real + &self.imag * &other.imag) / denominator.clone();
+        let imag = (&self.imag * &other.real - &self.real * &other.imag) / denominator;
 
         BigComplex { real, imag }
     }
