@@ -5,60 +5,144 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
+/// A wrapper around `num_bigint::BigInt` providing additional mathematical operations.
+///
+/// `BigInt` supports arbitrary-precision integer arithmetic with operations
+/// including basic arithmetic, modular arithmetic, prime number operations,
+/// and binary manipulations.
+///
+/// # Examples
+///
+/// ```
+/// use big_complex::BigInt;
+///
+/// let a = BigInt::new(42);
+/// let b = BigInt::from_string("12345678901234567890").unwrap();
+/// let sum = &a + &b;
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BigInt {
     inner: NumBigInt,
 }
 
 impl BigInt {
+    /// Creates a new `BigInt` from an `i64` value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::new(42);
+    /// assert_eq!(n.to_string(), "42");
+    /// ```
     pub fn new(value: i64) -> Self {
         BigInt {
             inner: NumBigInt::from(value),
         }
     }
 
+    /// Parses a `BigInt` from a decimal string.
+    ///
+    /// Returns `None` if the string is not a valid decimal number.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::from_string("12345678901234567890").unwrap();
+    /// assert_eq!(n.to_string(), "12345678901234567890");
+    ///
+    /// let invalid = BigInt::from_string("not a number");
+    /// assert!(invalid.is_none());
+    /// ```
     pub fn from_string(s: &str) -> Option<Self> {
         NumBigInt::parse_bytes(s.as_bytes(), 10).map(|n| BigInt { inner: n })
     }
 
+    /// Creates a `BigInt` from a big-endian byte representation.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    /// use num_bigint::Sign;
+    ///
+    /// let bytes = vec![0x01, 0x02, 0x03];
+    /// let n = BigInt::from_bytes_be(Sign::Plus, &bytes);
+    /// ```
     pub fn from_bytes_be(sign: Sign, bytes: &[u8]) -> Self {
         BigInt {
             inner: NumBigInt::from_bytes_be(sign, bytes),
         }
     }
 
+    /// Returns the big-endian byte representation of this `BigInt`.
+    ///
+    /// Returns a tuple of the sign and the byte vector.
     pub fn to_bytes_be(&self) -> (Sign, Vec<u8>) {
         self.inner.to_bytes_be()
     }
 
+    /// Returns the absolute value of this `BigInt`.
     pub fn abs(&self) -> Self {
         BigInt {
             inner: self.inner.abs(),
         }
     }
 
+    /// Returns the sign of this `BigInt`.
     pub fn sign(&self) -> Sign {
         self.inner.sign()
     }
 
+    /// Returns `true` if this `BigInt` is zero.
     pub fn is_zero(&self) -> bool {
         self.inner.is_zero()
     }
 
+    /// Returns `true` if this `BigInt` is positive.
     pub fn is_positive(&self) -> bool {
         self.inner.is_positive()
     }
 
+    /// Returns `true` if this `BigInt` is negative.
     pub fn is_negative(&self) -> bool {
         self.inner.is_negative()
     }
 
+    /// Raises this `BigInt` to the power of `exp`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::new(3);
+    /// assert_eq!(n.pow(4).to_string(), "81");
+    /// ```
     pub fn pow(&self, exp: u32) -> Self {
         BigInt {
             inner: self.inner.pow(exp),
         }
     }
 
+    /// Returns the integer square root of this `BigInt`.
+    ///
+    /// Returns `None` if this number is negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::new(144);
+    /// assert_eq!(n.sqrt().unwrap().to_string(), "12");
+    ///
+    /// let negative = BigInt::new(-4);
+    /// assert!(negative.sqrt().is_none());
+    /// ```
     pub fn sqrt(&self) -> Option<Self> {
         if self.is_negative() {
             return None;
@@ -81,30 +165,74 @@ impl BigInt {
         Some(high)
     }
 
+    /// Returns the greatest common divisor of this `BigInt` and `other`.
     pub fn gcd(&self, other: &Self) -> Self {
         BigInt {
             inner: self.inner.gcd(&other.inner),
         }
     }
 
+    /// Returns the least common multiple of this `BigInt` and `other`.
     pub fn lcm(&self, other: &Self) -> Self {
         BigInt {
             inner: self.inner.lcm(&other.inner),
         }
     }
 
+    /// Computes modular exponentiation: (self^exp) mod modulus.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let base = BigInt::new(7);
+    /// let exp = BigInt::new(3);
+    /// let modulus = BigInt::new(11);
+    /// // 7^3 mod 11 = 343 mod 11 = 2
+    /// assert_eq!(base.mod_pow(&exp, &modulus).to_string(), "2");
+    /// ```
     pub fn mod_pow(&self, exp: &Self, modulus: &Self) -> Self {
         BigInt {
             inner: self.inner.modpow(&exp.inner, &modulus.inner),
         }
     }
 
+    /// Returns the modular multiplicative inverse of this `BigInt` modulo `modulus`.
+    ///
+    /// Returns `None` if the inverse does not exist.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::new(3);
+    /// let modulus = BigInt::new(11);
+    /// // 3 * 4 = 12 ≡ 1 mod 11
+    /// assert_eq!(n.mod_inv(&modulus).unwrap().to_string(), "4");
+    /// ```
     pub fn mod_inv(&self, modulus: &Self) -> Option<Self> {
         self.inner
             .modinv(&modulus.inner)
             .map(|n| BigInt { inner: n })
     }
 
+    /// Returns the factorial of this `BigInt`.
+    ///
+    /// Returns `None` if this number is negative.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// let n = BigInt::new(5);
+    /// assert_eq!(n.factorial().unwrap().to_string(), "120"); // 5! = 120
+    ///
+    /// let negative = BigInt::new(-5);
+    /// assert!(negative.factorial().is_none());
+    /// ```
     pub fn factorial(&self) -> Option<Self> {
         if self.is_negative() {
             return None;
@@ -121,6 +249,20 @@ impl BigInt {
         Some(result)
     }
 
+    /// Checks if this `BigInt` is a prime number.
+    ///
+    /// Uses trial division up to the square root of the number.
+    /// For large numbers, this may be slow.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert!(BigInt::new(2).is_prime());
+    /// assert!(BigInt::new(97).is_prime());
+    /// assert!(!BigInt::new(100).is_prime());
+    /// ```
     pub fn is_prime(&self) -> bool {
         if self <= &BigInt::one() {
             return false;
@@ -147,6 +289,17 @@ impl BigInt {
         true
     }
 
+    /// Returns the smallest prime number greater than or equal to this `BigInt`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(10).next_prime().to_string(), "11");
+    /// assert_eq!(BigInt::new(14).next_prime().to_string(), "17");
+    /// assert_eq!(BigInt::new(97).next_prime().to_string(), "101");
+    /// ```
     pub fn next_prime(&self) -> Self {
         let mut candidate = if self <= &BigInt::new(2) {
             BigInt::new(2)
@@ -163,6 +316,19 @@ impl BigInt {
         candidate
     }
 
+    /// Returns the number of bits required to represent this `BigInt` in binary.
+    ///
+    /// Returns 0 for zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(0).bit_length(), 0);
+    /// assert_eq!(BigInt::new(7).bit_length(), 3);   // 111 in binary
+    /// assert_eq!(BigInt::new(8).bit_length(), 4);   // 1000 in binary
+    /// ```
     pub fn bit_length(&self) -> usize {
         if self.is_zero() {
             return 0;
@@ -170,6 +336,18 @@ impl BigInt {
         self.inner.bits() as usize
     }
 
+    /// Returns the number of set bits (1s) in the binary representation of the absolute value.
+    ///
+    /// Returns 0 for negative numbers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(7).count_ones(), 3);  // 111 in binary
+    /// assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
+    /// ```
     pub fn count_ones(&self) -> u64 {
         if self.is_negative() {
             return 0; // For negative numbers, we don't count ones
@@ -179,6 +357,18 @@ impl BigInt {
         bytes.iter().map(|b| b.count_ones() as u64).sum()
     }
 
+    /// Returns the number of trailing zeros in the binary representation.
+    ///
+    /// Returns `None` for zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(8).trailing_zeros(), Some(3));  // 1000 in binary
+    /// assert_eq!(BigInt::new(12).trailing_zeros(), Some(2)); // 1100 in binary
+    /// ```
     pub fn trailing_zeros(&self) -> Option<u64> {
         if self.is_zero() {
             return None;
@@ -199,6 +389,20 @@ impl BigInt {
         Some(zeros)
     }
 
+    /// Returns `true` if this `BigInt` is a power of two.
+    ///
+    /// Returns `false` for zero and negative numbers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert!(BigInt::new(1).is_power_of_two());
+    /// assert!(BigInt::new(2).is_power_of_two());
+    /// assert!(BigInt::new(8).is_power_of_two());
+    /// assert!(!BigInt::new(3).is_power_of_two());
+    /// ```
     pub fn is_power_of_two(&self) -> bool {
         if self <= &BigInt::zero() {
             return false;
@@ -207,6 +411,19 @@ impl BigInt {
         self.count_ones() == 1
     }
 
+    /// Returns the smallest power of two greater than or equal to this `BigInt`.
+    ///
+    /// Returns 1 for zero and negative numbers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(1).next_power_of_two().to_string(), "1");
+    /// assert_eq!(BigInt::new(3).next_power_of_two().to_string(), "4");
+    /// assert_eq!(BigInt::new(5).next_power_of_two().to_string(), "8");
+    /// ```
     pub fn next_power_of_two(&self) -> Self {
         if self <= &BigInt::one() {
             return BigInt::one();

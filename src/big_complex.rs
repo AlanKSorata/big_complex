@@ -3,6 +3,22 @@ use num_traits::{One, Zero};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
+/// A complex number with arbitrary-precision integer components.
+///
+/// `BigComplex` represents complex numbers of the form `a + bi` where
+/// both `a` (real part) and `b` (imaginary part) are `BigInt` values.
+///
+/// # Examples
+///
+/// ```
+/// use big_complex::BigComplex;
+///
+/// let z = BigComplex::from_i64(3, 4);
+/// assert_eq!(z.to_string(), "3+4i");
+///
+/// let conj = z.conjugate();
+/// assert_eq!(conj.to_string(), "3-4i");
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BigComplex {
     real: BigInt,
@@ -10,10 +26,32 @@ pub struct BigComplex {
 }
 
 impl BigComplex {
+    /// Creates a new `BigComplex` from real and imaginary parts.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::{BigInt, BigComplex};
+    ///
+    /// let z = BigComplex::new(BigInt::new(3), BigInt::new(4));
+    /// assert_eq!(z.to_string(), "3+4i");
+    /// ```
     pub fn new(real: BigInt, imag: BigInt) -> Self {
         BigComplex { real, imag }
     }
 
+    /// Creates a `BigComplex` from `i64` real and imaginary parts.
+    ///
+    /// This is a convenience method for creating `BigComplex` values from small integers.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(3, 4);
+    /// assert_eq!(z.to_string(), "3+4i");
+    /// ```
     pub fn from_i64(real: i64, imag: i64) -> Self {
         BigComplex {
             real: BigInt::new(real),
@@ -21,14 +59,28 @@ impl BigComplex {
         }
     }
 
+    /// Returns a reference to the real part.
     pub fn real(&self) -> &BigInt {
         &self.real
     }
 
+    /// Returns a reference to the imaginary part.
     pub fn imag(&self) -> &BigInt {
         &self.imag
     }
 
+    /// Returns the complex conjugate: `a + bi` → `a - bi`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(3, 4);
+    /// let conj = z.conjugate();
+    /// assert_eq!(conj.real().to_string(), "3");
+    /// assert_eq!(conj.imag().to_string(), "-4");
+    /// ```
     pub fn conjugate(&self) -> Self {
         BigComplex {
             real: self.real.clone(),
@@ -36,10 +88,32 @@ impl BigComplex {
         }
     }
 
+    /// Returns the squared magnitude: `|z|² = a² + b²`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(3, 4);
+    /// // |3+4i|² = 3² + 4² = 25
+    /// assert_eq!(z.magnitude_squared().to_string(), "25");
+    /// ```
     pub fn magnitude_squared(&self) -> BigInt {
         &self.real * &self.real + &self.imag * &self.imag
     }
 
+    /// Scales this complex number by a real factor.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::{BigInt, BigComplex};
+    ///
+    /// let z = BigComplex::from_i64(3, 4);
+    /// let scaled = z.scale(&BigInt::new(2));
+    /// assert_eq!(scaled.to_string(), "6+8i");
+    /// ```
     pub fn scale(&self, factor: &BigInt) -> Self {
         BigComplex {
             real: &self.real * factor,
@@ -47,6 +121,7 @@ impl BigComplex {
         }
     }
 
+    /// Adds a real number to this complex number.
     pub fn add_real(&self, real: &BigInt) -> Self {
         BigComplex {
             real: &self.real + real,
@@ -54,6 +129,7 @@ impl BigComplex {
         }
     }
 
+    /// Adds an imaginary number to this complex number.
     pub fn add_imag(&self, imag: &BigInt) -> Self {
         BigComplex {
             real: self.real.clone(),
@@ -61,18 +137,36 @@ impl BigComplex {
         }
     }
 
+    /// Returns `true` if both real and imaginary parts are zero.
     pub fn is_zero(&self) -> bool {
         self.real.is_zero() && self.imag.is_zero()
     }
 
+    /// Returns `true` if the imaginary part is zero.
     pub fn is_real(&self) -> bool {
         self.imag.is_zero()
     }
 
+    /// Returns `true` if the real part is zero.
     pub fn is_imaginary(&self) -> bool {
         self.real.is_zero()
     }
 
+    /// Raises this complex number to the power of `exp`.
+    ///
+    /// Uses exponentiation by squaring for efficiency.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(1, 1);
+    /// // (1+i)² = 1 + 2i + i² = 2i
+    /// let z2 = z.pow(2);
+    /// assert_eq!(z2.real().to_string(), "0");
+    /// assert_eq!(z2.imag().to_string(), "2");
+    /// ```
     pub fn pow(&self, exp: u32) -> Self {
         if exp == 0 {
             return BigComplex::one();
@@ -93,6 +187,23 @@ impl BigComplex {
         result
     }
 
+    /// Divides this complex number by a real integer if the division is exact.
+    ///
+    /// Returns `None` if the division is not exact or if the divisor is zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::{BigInt, BigComplex};
+    ///
+    /// let z = BigComplex::from_i64(6, 8);
+    /// let result = z.div_exact(&BigInt::new(2));
+    /// assert_eq!(result.unwrap().to_string(), "3+4i");
+    ///
+    /// // 5+7i is not divisible by 2
+    /// let z2 = BigComplex::from_i64(5, 7);
+    /// assert!(z2.div_exact(&BigInt::new(2)).is_none());
+    /// ```
     pub fn div_exact(&self, divisor: &BigInt) -> Option<Self> {
         if divisor.is_zero() {
             return None;
@@ -111,21 +222,57 @@ impl BigComplex {
         })
     }
 
+    /// Returns the norm (squared magnitude) of this complex number.
+    ///
+    /// This is an alias for `magnitude_squared`.
     pub fn norm(&self) -> BigInt {
         self.magnitude_squared()
     }
 
+    /// Returns the squared distance between this complex number and `other`.
     pub fn distance_to(&self, other: &Self) -> BigInt {
         let diff = self - other;
         diff.magnitude_squared()
     }
 
+    /// Returns the magnitude (absolute value) of this complex number.
+    ///
+    /// Returns the integer square root of the squared magnitude.
+    /// For `3+4i`, returns `5` (since |3+4i| = √(9+16) = 5).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(3, 4);
+    /// assert_eq!(z.magnitude().to_string(), "5");
+    /// ```
     pub fn magnitude(&self) -> BigInt {
         self.magnitude_squared()
             .sqrt()
             .unwrap_or_else(BigInt::zero)
     }
 
+    /// Creates a complex number from polar coordinates (simplified).
+    ///
+    /// This is a simplified version that only supports four discrete angles:
+    /// - 0: 0° (positive real axis)
+    /// - 1: 90° (positive imaginary axis)
+    /// - 2: 180° (negative real axis)
+    /// - 3: 270° (negative imaginary axis)
+    ///
+    /// The angle wraps around modulo 4.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::{BigInt, BigComplex};
+    ///
+    /// // r=5, θ=90° → 0+5i
+    /// let z = BigComplex::from_polar(&BigInt::new(5), 1);
+    /// assert_eq!(z.to_string(), "5i");
+    /// ```
     pub fn from_polar(r: &BigInt, theta_approx: i32) -> Self {
         // Simplified polar coordinate conversion using integer angle approximation
         // theta_approx: 0=0°, 1=90°, 2=180°, 3=270°
@@ -138,6 +285,24 @@ impl BigComplex {
         }
     }
 
+    /// Returns the quadrant of this complex number (0-3).
+    ///
+    /// - Quadrant 0: positive real, positive imaginary
+    /// - Quadrant 1: negative real, positive imaginary
+    /// - Quadrant 2: negative real, negative imaginary
+    /// - Quadrant 3: positive real, negative imaginary
+    ///
+    /// Returns `None` for zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// assert_eq!(BigComplex::from_i64(3, 4).arg_quadrant(), Some(0));
+    /// assert_eq!(BigComplex::from_i64(-3, 4).arg_quadrant(), Some(1));
+    /// assert_eq!(BigComplex::from_i64(0, 0).arg_quadrant(), None);
+    /// ```
     pub fn arg_quadrant(&self) -> Option<i32> {
         // Returns the quadrant of the complex number (0-3)
         if self.is_zero() {
@@ -152,21 +317,56 @@ impl BigComplex {
         }
     }
 
+    /// Rotates this complex number 90 degrees counterclockwise.
+    ///
+    /// Equivalent to multiplying by `i`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// let z = BigComplex::from_i64(1, 0);
+    /// // 1 rotated 90° → i
+    /// assert_eq!(z.rotate_90().to_string(), "i");
+    /// ```
     pub fn rotate_90(&self) -> Self {
         // Rotate 90 degrees counterclockwise: (a+bi) * i = -b + ai
         BigComplex::new(-&self.imag, self.real.clone())
     }
 
+    /// Rotates this complex number 180 degrees.
+    ///
+    /// Equivalent to multiplying by `-1`.
     pub fn rotate_180(&self) -> Self {
         // Rotate 180 degrees: (a+bi) * (-1) = -a - bi
         BigComplex::new(-&self.real, -&self.imag)
     }
 
+    /// Rotates this complex number 270 degrees counterclockwise (or 90° clockwise).
+    ///
+    /// Equivalent to multiplying by `-i`.
     pub fn rotate_270(&self) -> Self {
         // Rotate 270 degrees counterclockwise: (a+bi) * (-i) = b - ai
         BigComplex::new(self.imag.clone(), -&self.real)
     }
 
+    /// Calculates the nth roots of this complex number.
+    ///
+    /// **Note:** This is a simplified implementation. For square roots of real numbers,
+    /// it returns the correct two roots. For other cases, it returns a placeholder.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// // Square roots of 4
+    /// let roots = BigComplex::from_i64(4, 0).nth_root(2);
+    /// assert_eq!(roots.len(), 2);
+    /// assert_eq!(roots[0].to_string(), "2");
+    /// assert_eq!(roots[1].to_string(), "-2");
+    /// ```
     pub fn nth_root(&self, n: u32) -> Vec<Self> {
         // Calculate the nth roots of a complex number (simplified version, returns only principal roots)
         if n == 0 {
@@ -205,6 +405,23 @@ impl BigComplex {
         vec![BigComplex::new(BigInt::one(), BigInt::zero())]
     }
 
+    /// Returns a simplified approximation of the natural logarithm.
+    ///
+    /// **Note:** This is a demonstration implementation with limited precision.
+    /// For positive real numbers, it returns a rough integer approximation.
+    /// For complex numbers, it returns a placeholder value.
+    ///
+    /// Returns `None` for zero.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// // ln(1) = 0
+    /// let z = BigComplex::from_i64(1, 0);
+    /// assert!(z.ln_approx().unwrap().is_zero());
+    /// ```
     pub fn ln_approx(&self) -> Option<Self> {
         // Simplified natural logarithm approximation (for demonstration purposes)
         if self.is_zero() {
@@ -233,6 +450,21 @@ impl BigComplex {
         Some(BigComplex::new(BigInt::zero(), BigInt::one()))
     }
 
+    /// Returns a simplified approximation of the exponential function.
+    ///
+    /// **Note:** This is a demonstration implementation using a truncated
+    /// Taylor series expansion. Accuracy decreases for larger values.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    /// use num_traits::Zero;
+    ///
+    /// // exp(0) = 1
+    /// let z = BigComplex::zero();
+    /// assert_eq!(z.exp_approx().to_string(), "1");
+    /// ```
     pub fn exp_approx(&self) -> Self {
         // Simplified exponential function approximation (for demonstration purposes)
         if self.is_zero() {
