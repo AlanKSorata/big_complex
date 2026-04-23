@@ -132,12 +132,13 @@ fn main() {
 
     // 高级数学运算
     let square_test = BigComplex::from_i64(16, 0);
-    let roots = square_test.nth_root(2);
-    println!(
-        "Square roots of {}: {:?}",
-        square_test,
-        roots.iter().map(|r| r.to_string()).collect::<Vec<_>>()
-    );
+    if let Some(roots) = square_test.nth_root(2) {
+        println!(
+            "Square roots of {}: {:?}",
+            square_test,
+            roots.iter().map(|r| r.to_string()).collect::<Vec<_>>()
+        );
+    }
 
     let ln_test = BigComplex::from_i64(8, 0);
     if let Some(ln_result) = ln_test.ln_approx() {

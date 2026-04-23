@@ -251,8 +251,10 @@ impl BigInt {
 
     /// Checks if this `BigInt` is a prime number.
     ///
-    /// Uses trial division up to the square root of the number.
-    /// For large numbers, this may be slow.
+    /// **Note:** This implementation uses trial division, which is simple but
+    /// inefficient for large numbers. For numbers with hundreds of digits,
+    /// this will be very slow. Consider using a probabilistic primality test
+    /// (like Miller-Rabin) for production use with large numbers.
     ///
     /// # Examples
     ///

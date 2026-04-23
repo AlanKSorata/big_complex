@@ -184,7 +184,7 @@ fn test_new_features_integration() {
 
     // 高级数学运算测试
     let square_root_test = BigComplex::from_i64(9, 0);
-    let roots = square_root_test.nth_root(2);
+    let roots = square_root_test.nth_root(2).unwrap();
     assert_eq!(roots.len(), 2);
     assert_eq!(roots[0].real().to_string(), "3");
 

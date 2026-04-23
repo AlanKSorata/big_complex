@@ -353,8 +353,11 @@ impl BigComplex {
 
     /// Calculates the nth roots of this complex number.
     ///
-    /// **Note:** This is a simplified implementation. For square roots of real numbers,
-    /// it returns the correct two roots. For other cases, it returns a placeholder.
+    /// **Note:** This is a simplified implementation. Currently supported:
+    /// - n = 0: Returns empty vector
+    /// - n = 1: Returns self
+    /// - n = 2 (square root): Returns correct roots for real numbers (positive and negative)
+    /// - Other cases: Returns `None` (not yet implemented)
     ///
     /// # Examples
     ///
@@ -362,47 +365,82 @@ impl BigComplex {
     /// use big_complex::BigComplex;
     ///
     /// // Square roots of 4
-    /// let roots = BigComplex::from_i64(4, 0).nth_root(2);
+    /// let roots = BigComplex::from_i64(4, 0).nth_root(2).unwrap();
     /// assert_eq!(roots.len(), 2);
     /// assert_eq!(roots[0].to_string(), "2");
     /// assert_eq!(roots[1].to_string(), "-2");
+    ///
+    /// // Square roots of -4
+    /// let roots = BigComplex::from_i64(-4, 0).nth_root(2).unwrap();
+    /// assert_eq!(roots[0].to_string(), "2i");
+    /// assert_eq!(roots[1].to_string(), "-2i");
     /// ```
-    pub fn nth_root(&self, n: u32) -> Vec<Self> {
-        // Calculate the nth roots of a complex number (simplified version, returns only principal roots)
+    /// Returns the nth roots of this complex number.
+    ///
+    /// **Note:** This is a simplified implementation. It handles:
+    /// - n = 0: Returns empty vector
+    /// - n = 1: Returns self
+    /// - n = 2: Returns square roots for real numbers (positive and negative)
+    ///
+    /// For general complex nth roots (n > 2 or non-real numbers), returns `None`.
+    /// A complete implementation would require floating-point approximations.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use big_complex::BigComplex;
+    ///
+    /// // Square root of positive real
+    /// let z = BigComplex::from_i64(9, 0);
+    /// let roots = z.nth_root(2).unwrap();
+    /// assert_eq!(roots.len(), 2);
+    /// assert_eq!(roots[0].to_string(), "3");
+    ///
+    /// // Square root of negative real
+    /// let z_neg = BigComplex::from_i64(-4, 0);
+    /// let roots_neg = z_neg.nth_root(2).unwrap();
+    /// assert_eq!(roots_neg[0].to_string(), "2i");
+    ///
+    /// // Complex numbers return None for n > 2
+    /// let complex = BigComplex::from_i64(1, 1);
+    /// assert!(complex.nth_root(3).is_none());
+    /// ```
+    pub fn nth_root(&self, n: u32) -> Option<Vec<Self>> {
+        // Calculate the nth roots of a complex number
         if n == 0 {
-            return vec![];
+            return Some(vec![]);
         }
 
         if self.is_zero() {
-            return vec![BigComplex::zero()];
+            return Some(vec![BigComplex::zero()]);
         }
 
         if n == 1 {
-            return vec![self.clone()];
+            return Some(vec![self.clone()]);
         }
 
         if n == 2 {
-            // Simplified square root calculation
+            // Square root calculation for real numbers
             let mag_squared = self.magnitude_squared();
             let _mag = mag_squared.sqrt().unwrap_or_else(BigInt::zero);
 
             if self.is_real() && self.real.is_positive() {
                 let sqrt_real = self.real.sqrt().unwrap_or_else(BigInt::zero);
-                return vec![
+                return Some(vec![
                     BigComplex::new(sqrt_real.clone(), BigInt::zero()),
                     BigComplex::new(-&sqrt_real, BigInt::zero()),
-                ];
+                ]);
             } else if self.is_real() && self.real.is_negative() {
                 let sqrt_abs = (-&self.real).sqrt().unwrap_or_else(BigInt::zero);
-                return vec![
+                return Some(vec![
                     BigComplex::new(BigInt::zero(), sqrt_abs.clone()),
                     BigComplex::new(BigInt::zero(), -&sqrt_abs),
-                ];
+                ]);
             }
         }
 
-        // For other cases, return an approximate root
-        vec![BigComplex::new(BigInt::one(), BigInt::zero())]
+        // Not implemented for other cases
+        None
     }
 
     /// Returns a simplified approximation of the natural logarithm.
@@ -920,7 +958,7 @@ mod tests {
     fn test_big_complex_nth_root() {
         // Test square roots
         let z1 = BigComplex::from_i64(4, 0); // 4 + 0i
-        let roots = z1.nth_root(2);
+        let roots = z1.nth_root(2).unwrap();
         assert_eq!(roots.len(), 2);
         assert_eq!(roots[0].real().to_string(), "2");
         assert_eq!(roots[0].imag().to_string(), "0");
@@ -929,7 +967,7 @@ mod tests {
 
         // Test square roots of negative numbers
         let z2 = BigComplex::from_i64(-4, 0); // -4 + 0i
-        let roots2 = z2.nth_root(2);
+        let roots2 = z2.nth_root(2).unwrap();
         assert_eq!(roots2.len(), 2);
         assert_eq!(roots2[0].real().to_string(), "0");
         assert_eq!(roots2[0].imag().to_string(), "2");
@@ -938,15 +976,19 @@ mod tests {
 
         // Test roots of zero
         let zero = BigComplex::zero();
-        let zero_roots = zero.nth_root(3);
+        let zero_roots = zero.nth_root(3).unwrap();
         assert_eq!(zero_roots.len(), 1);
         assert!(zero_roots[0].is_zero());
 
         // Test first root
         let z3 = BigComplex::from_i64(5, 7);
-        let roots3 = z3.nth_root(1);
+        let roots3 = z3.nth_root(1).unwrap();
         assert_eq!(roots3.len(), 1);
         assert_eq!(roots3[0], z3);
+
+        // Test unimplemented case (general complex square root)
+        let z4 = BigComplex::from_i64(3, 4); // 3 + 4i
+        assert!(z4.nth_root(2).is_none()); // Not yet implemented for general complex numbers
     }
 
     #[test]
