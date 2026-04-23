@@ -340,7 +340,7 @@ impl BigInt {
 
     /// Returns the number of set bits (1s) in the binary representation of the absolute value.
     ///
-    /// Returns 0 for negative numbers.
+    /// For negative numbers, counts the bits of the absolute value.
     ///
     /// # Examples
     ///
@@ -349,13 +349,10 @@ impl BigInt {
     ///
     /// assert_eq!(BigInt::new(7).count_ones(), 3);  // 111 in binary
     /// assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
+    /// assert_eq!(BigInt::new(-7).count_ones(), 3); // same as 7
     /// ```
     pub fn count_ones(&self) -> u64 {
-        if self.is_negative() {
-            return 0; // For negative numbers, we don't count ones
-        }
-
-        let (_, bytes) = self.to_bytes_be();
+        let (_, bytes) = self.abs().to_bytes_be();
         bytes.iter().map(|b| b.count_ones() as u64).sum()
     }
 
@@ -764,7 +761,7 @@ mod tests {
         assert_eq!(BigInt::new(3).count_ones(), 2); // 11 in binary
         assert_eq!(BigInt::new(7).count_ones(), 3); // 111 in binary
         assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
-        assert_eq!(BigInt::new(-5).count_ones(), 0); // Negative numbers return 0
+        assert_eq!(BigInt::new(-5).count_ones(), 2); // |-5| = 5 = 101 in binary
 
         // Test trailing zeros
         assert_eq!(BigInt::new(0).trailing_zeros(), None);
