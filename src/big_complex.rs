@@ -497,6 +497,7 @@ impl BigComplex {
     ///
     /// **Note:** This is a demonstration implementation using a truncated
     /// Taylor series expansion. Accuracy decreases for larger values.
+    /// Only supports real numbers; returns `None` for complex numbers.
     ///
     /// # Examples
     ///
@@ -506,18 +507,22 @@ impl BigComplex {
     ///
     /// // exp(0) = 1
     /// let z = BigComplex::zero();
-    /// assert_eq!(z.exp_approx().to_string(), "1");
+    /// assert_eq!(z.exp_approx().unwrap().to_string(), "1");
+    ///
+    /// // Complex numbers return None
+    /// let complex = BigComplex::from_i64(1, 1);
+    /// assert!(complex.exp_approx().is_none());
     /// ```
-    pub fn exp_approx(&self) -> Self {
+    pub fn exp_approx(&self) -> Option<Self> {
         // Simplified exponential function approximation (for demonstration purposes)
         if self.is_zero() {
-            return BigComplex::one();
+            return Some(BigComplex::one());
         }
 
         if self.is_real() {
             // Simplified approximation of e^x
             if self.real.is_zero() {
-                return BigComplex::one();
+                return Some(BigComplex::one());
             }
 
             let mut result = BigComplex::one();
@@ -537,10 +542,11 @@ impl BigComplex {
                 }
             }
 
-            result
+            Some(result)
         } else {
-            // For complex numbers, return simplified result
-            BigComplex::new(BigInt::one(), BigInt::one())
+            // For complex numbers, return None as we cannot compute accurately
+            // without floating-point arithmetic
+            None
         }
     }
 }
@@ -1026,20 +1032,18 @@ mod tests {
     fn test_big_complex_exp_approx() {
         // Test exp(0) = 1
         let zero = BigComplex::zero();
-        let exp_zero = zero.exp_approx();
+        let exp_zero = zero.exp_approx().unwrap();
         assert_eq!(exp_zero.real().to_string(), "1");
         assert_eq!(exp_zero.imag().to_string(), "0");
 
         // Test exponential approximation for real numbers
         let z1 = BigComplex::from_i64(1, 0);
-        let exp_z1 = z1.exp_approx();
+        let exp_z1 = z1.exp_approx().unwrap();
         // Since it's a simplified approximation, we only check that the result is not zero
         assert!(!exp_z1.is_zero());
 
-        // Test exponential of complex numbers (simplified result)
+        // Test exponential of complex numbers (should return None)
         let z2 = BigComplex::from_i64(0, 1);
-        let exp_z2 = z2.exp_approx();
-        assert_eq!(exp_z2.real().to_string(), "1");
-        assert_eq!(exp_z2.imag().to_string(), "1");
+        assert_eq!(z2.exp_approx(), None);
     }
 }

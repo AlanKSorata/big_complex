@@ -146,7 +146,9 @@ fn main() {
     }
 
     let exp_test = BigComplex::from_i64(2, 0);
-    println!("exp({}) ≈ {}", exp_test, exp_test.exp_approx());
+    if let Some(exp_result) = exp_test.exp_approx() {
+        println!("exp({}) ≈ {}", exp_test, exp_result);
+    }
 
     println!("\n11. Performance Test with Large Numbers:");
     let very_large =

@@ -193,7 +193,7 @@ fn test_new_features_integration() {
     assert!(ln_result.is_zero());
 
     let exp_test = BigComplex::zero();
-    let exp_result = exp_test.exp_approx();
+    let exp_result = exp_test.exp_approx().unwrap();
     assert_eq!(exp_result.real().to_string(), "1");
     assert_eq!(exp_result.imag().to_string(), "0");
 }
