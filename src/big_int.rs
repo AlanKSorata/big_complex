@@ -410,9 +410,9 @@ impl BigInt {
         self.count_ones() == 1
     }
 
-    /// Returns the smallest power of two greater than or equal to this `BigInt`.
+    /// Returns the smallest power of two greater than or equal to the absolute value.
     ///
-    /// Returns 1 for zero and negative numbers.
+    /// For zero and negative numbers, returns 1.
     ///
     /// # Examples
     ///
@@ -422,15 +422,17 @@ impl BigInt {
     /// assert_eq!(BigInt::new(1).next_power_of_two().to_string(), "1");
     /// assert_eq!(BigInt::new(3).next_power_of_two().to_string(), "4");
     /// assert_eq!(BigInt::new(5).next_power_of_two().to_string(), "8");
+    /// assert_eq!(BigInt::new(-5).next_power_of_two().to_string(), "8"); // uses absolute value
     /// ```
     pub fn next_power_of_two(&self) -> Self {
-        if self <= &BigInt::one() {
+        let abs = self.abs();
+        if abs <= BigInt::one() {
             return BigInt::one();
         }
 
-        let bit_len = self.bit_length();
-        if self.is_power_of_two() {
-            return self.clone();
+        let bit_len = abs.bit_length();
+        if abs.is_power_of_two() {
+            return abs;
         }
 
         BigInt::new(2).pow(bit_len as u32)
