@@ -134,7 +134,7 @@ impl BigInt {
             return false;
         }
 
-        let sqrt_n = self.sqrt().unwrap_or_else(|| BigInt::zero());
+        let sqrt_n = self.sqrt().unwrap_or_else(BigInt::zero);
         let mut i = BigInt::new(3);
 
         while i <= sqrt_n {
@@ -231,7 +231,7 @@ impl Rem for BigInt {
     }
 }
 
-impl<'a> Rem for &'a BigInt {
+impl Rem for &BigInt {
     type Output = BigInt;
 
     fn rem(self, other: Self) -> BigInt {
@@ -289,7 +289,7 @@ impl Add for BigInt {
     }
 }
 
-impl<'a> Add for &'a BigInt {
+impl Add for &BigInt {
     type Output = BigInt;
 
     fn add(self, other: Self) -> BigInt {
@@ -309,7 +309,7 @@ impl Sub for BigInt {
     }
 }
 
-impl<'a> Sub for &'a BigInt {
+impl Sub for &BigInt {
     type Output = BigInt;
 
     fn sub(self, other: Self) -> BigInt {
@@ -329,7 +329,7 @@ impl Mul for BigInt {
     }
 }
 
-impl<'a> Mul for &'a BigInt {
+impl Mul for &BigInt {
     type Output = BigInt;
 
     fn mul(self, other: Self) -> BigInt {
@@ -349,7 +349,7 @@ impl Div for BigInt {
     }
 }
 
-impl<'a> Div for &'a BigInt {
+impl Div for &BigInt {
     type Output = BigInt;
 
     fn div(self, other: Self) -> BigInt {
@@ -367,7 +367,7 @@ impl Neg for BigInt {
     }
 }
 
-impl<'a> Neg for &'a BigInt {
+impl Neg for &BigInt {
     type Output = BigInt;
 
     fn neg(self) -> BigInt {
@@ -379,7 +379,7 @@ impl<'a> Neg for &'a BigInt {
 
 impl PartialOrd for BigInt {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.inner.partial_cmp(&other.inner)
+        Some(self.cmp(other))
     }
 }
 

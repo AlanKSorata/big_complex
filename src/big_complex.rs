@@ -123,7 +123,7 @@ impl BigComplex {
     pub fn magnitude(&self) -> BigInt {
         self.magnitude_squared()
             .sqrt()
-            .unwrap_or_else(|| BigInt::zero())
+            .unwrap_or_else(BigInt::zero)
     }
 
     pub fn from_polar(r: &BigInt, theta_approx: i32) -> Self {
@@ -184,16 +184,16 @@ impl BigComplex {
         if n == 2 {
             // Simplified square root calculation
             let mag_squared = self.magnitude_squared();
-            let _mag = mag_squared.sqrt().unwrap_or_else(|| BigInt::zero());
+            let _mag = mag_squared.sqrt().unwrap_or_else(BigInt::zero);
 
             if self.is_real() && self.real.is_positive() {
-                let sqrt_real = self.real.sqrt().unwrap_or_else(|| BigInt::zero());
+                let sqrt_real = self.real.sqrt().unwrap_or_else(BigInt::zero);
                 return vec![
                     BigComplex::new(sqrt_real.clone(), BigInt::zero()),
                     BigComplex::new(-&sqrt_real, BigInt::zero()),
                 ];
             } else if self.is_real() && self.real.is_negative() {
-                let sqrt_abs = (-&self.real).sqrt().unwrap_or_else(|| BigInt::zero());
+                let sqrt_abs = (-&self.real).sqrt().unwrap_or_else(BigInt::zero);
                 return vec![
                     BigComplex::new(BigInt::zero(), sqrt_abs.clone()),
                     BigComplex::new(BigInt::zero(), -&sqrt_abs),
@@ -299,7 +299,7 @@ impl Add for BigComplex {
     }
 }
 
-impl<'a> Add for &'a BigComplex {
+impl Add for &BigComplex {
     type Output = BigComplex;
 
     fn add(self, other: Self) -> BigComplex {
@@ -321,7 +321,7 @@ impl Sub for BigComplex {
     }
 }
 
-impl<'a> Sub for &'a BigComplex {
+impl Sub for &BigComplex {
     type Output = BigComplex;
 
     fn sub(self, other: Self) -> BigComplex {
@@ -343,7 +343,7 @@ impl Mul for BigComplex {
     }
 }
 
-impl<'a> Mul for &'a BigComplex {
+impl Mul for &BigComplex {
     type Output = BigComplex;
 
     fn mul(self, other: Self) -> BigComplex {
@@ -438,7 +438,7 @@ impl Neg for BigComplex {
     }
 }
 
-impl<'a> Neg for &'a BigComplex {
+impl Neg for &BigComplex {
     type Output = BigComplex;
 
     fn neg(self) -> BigComplex {
