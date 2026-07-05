@@ -14,7 +14,7 @@ use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 /// # Examples
 ///
 /// ```
-/// use big_complex::BigInt;
+/// use gauss_int::BigInt;
 ///
 /// let a = BigInt::new(42);
 /// let b = BigInt::from_string("12345678901234567890").unwrap();
@@ -31,7 +31,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::new(42);
     /// assert_eq!(n.to_string(), "42");
@@ -49,7 +49,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::from_string("12345678901234567890").unwrap();
     /// assert_eq!(n.to_string(), "12345678901234567890");
@@ -66,7 +66,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     /// use num_bigint::Sign;
     ///
     /// let bytes = vec![0x01, 0x02, 0x03];
@@ -117,7 +117,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::new(3);
     /// assert_eq!(n.pow(4).to_string(), "81");
@@ -135,7 +135,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::new(144);
     /// assert_eq!(n.sqrt().unwrap().to_string(), "12");
@@ -184,7 +184,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let base = BigInt::new(7);
     /// let exp = BigInt::new(3);
@@ -205,7 +205,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::new(3);
     /// let modulus = BigInt::new(11);
@@ -225,7 +225,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// let n = BigInt::new(5);
     /// assert_eq!(n.factorial().unwrap().to_string(), "120"); // 5! = 120
@@ -258,7 +258,7 @@ impl BigInt {
     /// # Examples
     ///
     /// ```
-    /// use big_complex::BigInt;
+    /// use gauss_int::BigInt;
     ///
     /// assert!(BigInt::new(2).is_prime());
     /// assert!(BigInt::new(97).is_prime());
@@ -312,7 +312,8 @@ impl BigInt {
 
         // Choose witnesses based on bit length
         // These values are proven to be sufficient for deterministic testing
-        let witnesses: Vec<BigInt> = match self.bit_length() {
+        let bit_len = self.inner.bits() as usize;
+        let witnesses: Vec<BigInt> = match bit_len {
             0..=64 => vec![BigInt::new(2), BigInt::new(3), BigInt::new(5), BigInt::new(7), BigInt::new(11)],
             _ => vec![
                 BigInt::new(2),
@@ -352,151 +353,9 @@ impl BigInt {
         true
     }
 
-    /// Returns the smallest prime number greater than or equal to this `BigInt`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert_eq!(BigInt::new(10).next_prime().to_string(), "11");
-    /// assert_eq!(BigInt::new(14).next_prime().to_string(), "17");
-    /// assert_eq!(BigInt::new(97).next_prime().to_string(), "101");
-    /// ```
-    pub fn next_prime(&self) -> Self {
-        let mut candidate = if self <= &BigInt::new(2) {
-            BigInt::new(2)
-        } else if self % &BigInt::new(2) == BigInt::zero() {
-            self + &BigInt::one()
-        } else {
-            self + &BigInt::new(2)
-        };
-
-        while !candidate.is_prime() {
-            candidate = candidate + BigInt::new(2);
-        }
-
-        candidate
-    }
-
-    /// Returns the number of bits required to represent this `BigInt` in binary.
-    ///
-    /// Returns 0 for zero.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert_eq!(BigInt::new(0).bit_length(), 0);
-    /// assert_eq!(BigInt::new(7).bit_length(), 3);   // 111 in binary
-    /// assert_eq!(BigInt::new(8).bit_length(), 4);   // 1000 in binary
-    /// ```
-    pub fn bit_length(&self) -> usize {
-        if self.is_zero() {
-            return 0;
-        }
-        self.inner.bits() as usize
-    }
-
-    /// Returns the number of set bits (1s) in the binary representation of the absolute value.
-    ///
-    /// For negative numbers, counts the bits of the absolute value.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert_eq!(BigInt::new(7).count_ones(), 3);  // 111 in binary
-    /// assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
-    /// assert_eq!(BigInt::new(-7).count_ones(), 3); // same as 7
-    /// ```
-    pub fn count_ones(&self) -> u64 {
-        let (_, bytes) = self.abs().to_bytes_be();
-        bytes.iter().map(|b| b.count_ones() as u64).sum()
-    }
-
-    /// Returns the number of trailing zeros in the binary representation.
-    ///
-    /// Returns `None` for zero.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert_eq!(BigInt::new(8).trailing_zeros(), Some(3));  // 1000 in binary
-    /// assert_eq!(BigInt::new(12).trailing_zeros(), Some(2)); // 1100 in binary
-    /// ```
-    pub fn trailing_zeros(&self) -> Option<u64> {
-        if self.is_zero() {
-            return None;
-        }
-
-        let (_, bytes) = self.to_bytes_be();
-        let mut zeros = 0u64;
-
-        for &byte in bytes.iter().rev() {
-            if byte == 0 {
-                zeros += 8;
-            } else {
-                zeros += byte.trailing_zeros() as u64;
-                break;
-            }
-        }
-
-        Some(zeros)
-    }
-
-    /// Returns `true` if this `BigInt` is a power of two.
-    ///
-    /// Returns `false` for zero and negative numbers.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert!(BigInt::new(1).is_power_of_two());
-    /// assert!(BigInt::new(2).is_power_of_two());
-    /// assert!(BigInt::new(8).is_power_of_two());
-    /// assert!(!BigInt::new(3).is_power_of_two());
-    /// ```
-    pub fn is_power_of_two(&self) -> bool {
-        if self <= &BigInt::zero() {
-            return false;
-        }
-
-        self.count_ones() == 1
-    }
-
-    /// Returns the smallest power of two greater than or equal to the absolute value.
-    ///
-    /// For zero and negative numbers, returns 1.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use big_complex::BigInt;
-    ///
-    /// assert_eq!(BigInt::new(1).next_power_of_two().to_string(), "1");
-    /// assert_eq!(BigInt::new(3).next_power_of_two().to_string(), "4");
-    /// assert_eq!(BigInt::new(5).next_power_of_two().to_string(), "8");
-    /// assert_eq!(BigInt::new(-5).next_power_of_two().to_string(), "8"); // uses absolute value
-    /// ```
-    pub fn next_power_of_two(&self) -> Self {
-        let abs = self.abs();
-        if abs <= BigInt::one() {
-            return BigInt::one();
-        }
-
-        let bit_len = abs.bit_length();
-        if abs.is_power_of_two() {
-            return abs;
-        }
-
-        BigInt::new(2).pow(bit_len as u32)
+    /// Returns (quotient, remainder) of division, where quotient truncates toward zero.
+    pub fn div_mod(&self, other: &Self) -> (Self, Self) {
+        (self / other, self % other)
     }
 }
 
@@ -814,60 +673,15 @@ mod tests {
     }
 
     #[test]
-    fn test_big_int_next_prime() {
-        assert_eq!(BigInt::new(0).next_prime().to_string(), "2");
-        assert_eq!(BigInt::new(1).next_prime().to_string(), "2");
-        assert_eq!(BigInt::new(2).next_prime().to_string(), "2");
-        assert_eq!(BigInt::new(3).next_prime().to_string(), "5");
-        assert_eq!(BigInt::new(4).next_prime().to_string(), "5");
-        assert_eq!(BigInt::new(10).next_prime().to_string(), "11");
-        assert_eq!(BigInt::new(14).next_prime().to_string(), "17");
-        assert_eq!(BigInt::new(97).next_prime().to_string(), "101");
-    }
+    fn test_big_int_div_mod() {
+        let a = BigInt::new(17);
+        let b = BigInt::new(5);
+        let (q, r) = a.div_mod(&b);
+        assert_eq!(q.to_string(), "3");
+        assert_eq!(r.to_string(), "2");
 
-    #[test]
-    fn test_big_int_binary_operations() {
-        // Test bit length
-        assert_eq!(BigInt::new(0).bit_length(), 0);
-        assert_eq!(BigInt::new(1).bit_length(), 1);
-        assert_eq!(BigInt::new(2).bit_length(), 2);
-        assert_eq!(BigInt::new(7).bit_length(), 3); // 111 in binary
-        assert_eq!(BigInt::new(8).bit_length(), 4); // 1000 in binary
-        assert_eq!(BigInt::new(255).bit_length(), 8); // 11111111 in binary
-
-        // Test count of ones
-        assert_eq!(BigInt::new(0).count_ones(), 0);
-        assert_eq!(BigInt::new(1).count_ones(), 1);
-        assert_eq!(BigInt::new(3).count_ones(), 2); // 11 in binary
-        assert_eq!(BigInt::new(7).count_ones(), 3); // 111 in binary
-        assert_eq!(BigInt::new(15).count_ones(), 4); // 1111 in binary
-        assert_eq!(BigInt::new(-5).count_ones(), 2); // |-5| = 5 = 101 in binary
-
-        // Test trailing zeros
-        assert_eq!(BigInt::new(0).trailing_zeros(), None);
-        assert_eq!(BigInt::new(1).trailing_zeros(), Some(0)); // 1
-        assert_eq!(BigInt::new(2).trailing_zeros(), Some(1)); // 10
-        assert_eq!(BigInt::new(4).trailing_zeros(), Some(2)); // 100
-        assert_eq!(BigInt::new(8).trailing_zeros(), Some(3)); // 1000
-        assert_eq!(BigInt::new(12).trailing_zeros(), Some(2)); // 1100
-
-        // Test if power of two
-        assert!(!BigInt::new(0).is_power_of_two());
-        assert!(BigInt::new(1).is_power_of_two());
-        assert!(BigInt::new(2).is_power_of_two());
-        assert!(!BigInt::new(3).is_power_of_two());
-        assert!(BigInt::new(4).is_power_of_two());
-        assert!(!BigInt::new(5).is_power_of_two());
-        assert!(BigInt::new(8).is_power_of_two());
-        assert!(BigInt::new(16).is_power_of_two());
-        assert!(!BigInt::new(-4).is_power_of_two());
-
-        // Test next power of two
-        assert_eq!(BigInt::new(0).next_power_of_two().to_string(), "1");
-        assert_eq!(BigInt::new(1).next_power_of_two().to_string(), "1");
-        assert_eq!(BigInt::new(2).next_power_of_two().to_string(), "2");
-        assert_eq!(BigInt::new(3).next_power_of_two().to_string(), "4");
-        assert_eq!(BigInt::new(5).next_power_of_two().to_string(), "8");
-        assert_eq!(BigInt::new(9).next_power_of_two().to_string(), "16");
+        let (q2, r2) = BigInt::new(-17).div_mod(&BigInt::new(5));
+        assert_eq!(q2.to_string(), "-3");
+        assert_eq!(r2.to_string(), "-2");
     }
 }

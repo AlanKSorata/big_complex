@@ -1,5 +1,5 @@
 pub mod big_int;
-pub mod big_complex;
+pub mod gauss_int;
 
 pub use big_int::BigInt;
-pub use big_complex::BigComplex;
+pub use gauss_int::GaussInt;
