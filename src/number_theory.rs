@@ -187,6 +187,72 @@ fn pollard_f(x: &BigInt, n: &BigInt, c: &BigInt) -> BigInt {
     &xx % n
 }
 
+/// Euler's totient function φ(n) — count of integers 1 ≤ k ≤ n with gcd(k, n) = 1.
+pub fn euler_totient(n: &BigInt) -> BigInt {
+    if *n <= BigInt::one() {
+        return BigInt::one();
+    }
+    let factors = factorize(n);
+    let mut result = BigInt::one();
+    for (p, e) in &factors {
+        let term = p.pow(*e) - p.pow(*e - 1_u32);
+        result = result * term;
+    }
+    result
+}
+
+/// Jacobi symbol (a/n), generalizing the Legendre symbol to odd positive moduli.
+pub fn jacobi_symbol(a: &BigInt, n: &BigInt) -> i32 {
+    if (n % &BigInt::new(2)).is_zero() {
+        panic!("Jacobi symbol requires an odd modulus");
+    }
+
+    let mut a = a % n;
+    let mut n = n.clone();
+    let mut t = 1i32;
+
+    while a != BigInt::zero() {
+        while (&a % &BigInt::new(2)).is_zero() {
+            a = a / BigInt::new(2);
+            let n_mod_8 = &n % &BigInt::new(8);
+            if n_mod_8 == BigInt::new(3) || n_mod_8 == BigInt::new(5) {
+                t = -t;
+            }
+        }
+
+        std::mem::swap(&mut a, &mut n);
+        if (&a % &BigInt::new(4)) == BigInt::new(3) && (&n % &BigInt::new(4)) == BigInt::new(3) {
+            t = -t;
+        }
+        a = &a % &n;
+    }
+
+    if n == BigInt::one() { t } else { 0 }
+}
+
+/// Chinese Remainder Theorem — solves x ≡ a_i (mod m_i) for pairwise coprime m_i.
+pub fn crt(congruences: &[(BigInt, BigInt)]) -> Option<BigInt> {
+    if congruences.is_empty() {
+        return None;
+    }
+
+    let product: BigInt = congruences.iter()
+        .map(|(_, m)| m.clone())
+        .fold(BigInt::one(), |a, b| a * b);
+
+    let mut result = BigInt::zero();
+
+    for (a, m) in congruences {
+        let p = &product / m;
+        let inv = p.mod_inv(m)?;
+        let term = a * &p;
+        let term = &term * &inv;
+        result = &result + &term;
+    }
+
+    Some(&result % &product)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -270,5 +336,51 @@ mod tests {
         let factors = factorize(&n);
         let product: BigInt = factors.iter().map(|(p, e)| p.pow(*e)).fold(BigInt::one(), |a, b| a * b);
         assert_eq!(product, n);
+    }
+
+    #[test]
+    fn test_euler_totient_prime() {
+        assert_eq!(euler_totient(&BigInt::new(7)), BigInt::new(6));
+        assert_eq!(euler_totient(&BigInt::new(97)), BigInt::new(96));
+    }
+
+    #[test]
+    fn test_euler_totient_composite() {
+        assert_eq!(euler_totient(&BigInt::new(12)), BigInt::new(4));
+        assert_eq!(euler_totient(&BigInt::new(100)), BigInt::new(40));
+    }
+
+    #[test]
+    fn test_jacobi_basic() {
+        assert_eq!(jacobi_symbol(&BigInt::new(2), &BigInt::new(7)), 1);
+        assert_eq!(jacobi_symbol(&BigInt::new(3), &BigInt::new(7)), -1);
+        assert_eq!(jacobi_symbol(&BigInt::new(0), &BigInt::new(7)), 0);
+    }
+
+    #[test]
+    fn test_crt_basic() {
+        let congruences = vec![
+            (BigInt::new(2), BigInt::new(3)),
+            (BigInt::new(3), BigInt::new(5)),
+        ];
+        let x = crt(&congruences).unwrap();
+        assert_eq!(&x % &BigInt::new(3), BigInt::new(2));
+        assert_eq!(&x % &BigInt::new(5), BigInt::new(3));
+    }
+
+    #[test]
+    fn test_crt_no_solution() {
+        let congruences = vec![
+            (BigInt::new(1), BigInt::new(2)),
+            (BigInt::new(0), BigInt::new(4)),
+        ];
+        assert!(crt(&congruences).is_none());
+    }
+
+    #[test]
+    fn test_crt_single_congruence() {
+        let congruences = vec![(BigInt::new(5), BigInt::new(7))];
+        let x = crt(&congruences).unwrap();
+        assert_eq!(&x % &BigInt::new(7), BigInt::new(5));
     }
 }
