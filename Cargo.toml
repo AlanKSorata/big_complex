@@ -6,10 +6,19 @@ license = "MIT OR Apache-2.0"
 description = "Gaussian integer arithmetic and number theory utilities"
 repository = "https://github.com/AlanKSorata/big_complex"
 
+[[bin]]
+name = "gauss"
+path = "src/main.rs"
+
+[lib]
+name = "gauss_int"
+path = "src/lib.rs"
+
 [dependencies]
 num-bigint = "0.4"
 num-traits = "0.2"
 num-integer = "0.1"
+clap = { version = "4", features = ["derive"] }
 
 [dev-dependencies]
 proptest = "1.0"
