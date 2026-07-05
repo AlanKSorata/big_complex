@@ -261,7 +261,7 @@ fn round_div(a: &BigInt, b: &BigInt) -> BigInt {
     let two_r = BigInt::new(2) * r.abs();
     let b_abs = b.abs();
 
-    if two_r > b_abs || two_r == b_abs {
+    if two_r >= b_abs {
         // Round away from zero
         if (a.is_negative() && b.is_negative()) || (!a.is_negative() && !b.is_negative()) {
             q + BigInt::one()
@@ -382,7 +382,7 @@ impl GaussInt {
         let mut b = other.clone();
 
         while !b.is_zero() {
-            let r = (&a).div_rem(&b).unwrap().1;
+            let r = a.div_rem(&b).unwrap().1;
             a = b;
             b = r;
         }
@@ -634,7 +634,7 @@ mod tests {
         let g = a.gcd(&b);
         // gcd should divide both a and b
         assert!(!g.is_zero());
-        assert!((&a).div_rem(&g).unwrap().1.is_zero(), "gcd should divide a");
-        assert!((&b).div_rem(&g).unwrap().1.is_zero(), "gcd should divide b");
+        assert!(a.div_rem(&g).unwrap().1.is_zero(), "gcd should divide a");
+        assert!(b.div_rem(&g).unwrap().1.is_zero(), "gcd should divide b");
     }
 }
