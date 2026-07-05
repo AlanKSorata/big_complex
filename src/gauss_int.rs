@@ -362,11 +362,9 @@ impl GaussInt {
         for u in &units[1..] {
             let candidate = u * self;
             let real_pos = candidate.real().is_positive();
-            let real_zero_imag_pos =
-                candidate.real().is_zero() && candidate.imag().is_positive();
+            let real_zero_imag_pos = candidate.real().is_zero() && candidate.imag().is_positive();
             let best_real_pos = best.real().is_positive();
-            let best_real_zero_imag_pos =
-                best.real().is_zero() && best.imag().is_positive();
+            let best_real_zero_imag_pos = best.real().is_zero() && best.imag().is_positive();
             if (real_pos || real_zero_imag_pos) && !(best_real_pos || best_real_zero_imag_pos) {
                 best = candidate;
             }
@@ -456,11 +454,20 @@ mod tests {
     #[test]
     fn test_gauss_int_pow() {
         // (1+i)^2 = 2i
-        assert_eq!(GaussInt::from_i64(1, 1).pow_u32(2), GaussInt::from_i64(0, 2));
+        assert_eq!(
+            GaussInt::from_i64(1, 1).pow_u32(2),
+            GaussInt::from_i64(0, 2)
+        );
         // (1+i)^4 = -4
-        assert_eq!(GaussInt::from_i64(1, 1).pow_u32(4), GaussInt::from_i64(-4, 0));
+        assert_eq!(
+            GaussInt::from_i64(1, 1).pow_u32(4),
+            GaussInt::from_i64(-4, 0)
+        );
         // (1+i)^8 = 16
-        assert_eq!(GaussInt::from_i64(1, 1).pow_u32(8), GaussInt::from_i64(16, 0));
+        assert_eq!(
+            GaussInt::from_i64(1, 1).pow_u32(8),
+            GaussInt::from_i64(16, 0)
+        );
         // z^0 = 1
         assert_eq!(GaussInt::from_i64(5, 7).pow_u32(0), GaussInt::one());
     }
@@ -514,7 +521,12 @@ mod tests {
         let a = GaussInt::from_i64(-3, 4);
         let b = GaussInt::from_i64(1, -2);
         let (q, r) = a.div_rem(&b).unwrap();
-        assert!(r.norm() < b.norm(), "N(r)={} >= N(b)={}", r.norm(), b.norm());
+        assert!(
+            r.norm() < b.norm(),
+            "N(r)={} >= N(b)={}",
+            r.norm(),
+            b.norm()
+        );
         assert_eq!(&q * &b + &r, a);
     }
 
@@ -566,31 +578,61 @@ mod tests {
         ];
         for (a, b) in cases {
             let (q, r) = a.clone().div_rem(&b).unwrap();
-            assert!(r.norm() < b.norm(),
-                "N({}) = {} >= N({}) = {} for a={}, b={}", r, r.norm(), b, b.norm(), a, b);
-            assert_eq!(&q * &b + &r, a,
-                "a = q*b + r failed: {} != {}*{} + {}", a, q, b, r);
+            assert!(
+                r.norm() < b.norm(),
+                "N({}) = {} >= N({}) = {} for a={}, b={}",
+                r,
+                r.norm(),
+                b,
+                b.norm(),
+                a,
+                b
+            );
+            assert_eq!(
+                &q * &b + &r,
+                a,
+                "a = q*b + r failed: {} != {}*{} + {}",
+                a,
+                q,
+                b,
+                r
+            );
         }
     }
 
     #[test]
     fn test_round_div_negative() {
         // -11/5 = -2.2 -> round to -2
-        assert_eq!(round_div(&BigInt::new(-11), &BigInt::new(5)), BigInt::new(-2));
+        assert_eq!(
+            round_div(&BigInt::new(-11), &BigInt::new(5)),
+            BigInt::new(-2)
+        );
         // -13/5 = -2.6 -> round to -3
-        assert_eq!(round_div(&BigInt::new(-13), &BigInt::new(5)), BigInt::new(-3));
+        assert_eq!(
+            round_div(&BigInt::new(-13), &BigInt::new(5)),
+            BigInt::new(-3)
+        );
         // 11/5 = 2.2 -> round to 2
         assert_eq!(round_div(&BigInt::new(11), &BigInt::new(5)), BigInt::new(2));
         // 13/5 = 2.6 -> round to 3
         assert_eq!(round_div(&BigInt::new(13), &BigInt::new(5)), BigInt::new(3));
         // -11/(-5) = 2.2 -> round to 2
-        assert_eq!(round_div(&BigInt::new(-11), &BigInt::new(-5)), BigInt::new(2));
+        assert_eq!(
+            round_div(&BigInt::new(-11), &BigInt::new(-5)),
+            BigInt::new(2)
+        );
         // -13/(-5) = 2.6 -> round to 3
-        assert_eq!(round_div(&BigInt::new(-13), &BigInt::new(-5)), BigInt::new(3));
+        assert_eq!(
+            round_div(&BigInt::new(-13), &BigInt::new(-5)),
+            BigInt::new(3)
+        );
         // 5/2 = 2.5 (tie) -> round to 3
         assert_eq!(round_div(&BigInt::new(5), &BigInt::new(2)), BigInt::new(3));
         // -5/2 = -2.5 (tie) -> round to -3
-        assert_eq!(round_div(&BigInt::new(-5), &BigInt::new(2)), BigInt::new(-3));
+        assert_eq!(
+            round_div(&BigInt::new(-5), &BigInt::new(2)),
+            BigInt::new(-3)
+        );
     }
 
     #[test]

@@ -5,5 +5,5 @@ pub mod number_theory;
 pub use big_int::BigInt;
 pub use gauss_int::GaussInt;
 pub use number_theory::{
-    is_prime, factorize, euler_totient, jacobi_symbol, crt, is_gaussian_prime
+    crt, euler_totient, factorize, is_gaussian_prime, is_prime, jacobi_symbol,
 };

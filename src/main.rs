@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use gauss_int::{GaussInt, BigInt};
+use gauss_int::{BigInt, GaussInt};
 
 #[derive(Parser)]
 #[command(name = "gauss", about = "Gaussian integer and number theory CLI")]
@@ -46,8 +46,7 @@ fn parse_gauss(s: &str) -> Result<GaussInt, String> {
     }
 
     // Handle pure imaginary: "i", "-i", "3i", "-5i"
-    if s.ends_with('i') {
-        let before_i = &s[..s.len() - 1];
+    if let Some(before_i) = s.strip_suffix('i') {
         if before_i.is_empty() {
             return Ok(GaussInt::from_i64(0, 1));
         }
@@ -69,7 +68,7 @@ fn parse_gauss(s: &str) -> Result<GaussInt, String> {
         // Complex with real and imag: "3+4i", "3-4i"
         // Find the separator after the first character
         let sep_pos = before_i[1..]
-            .find(|c: char| c == '+' || c == '-')
+            .find(['+', '-'])
             .map(|pos| pos + 1) // +1 because we started from index 1
             .ok_or_else(|| format!("invalid Gaussian integer: {}", s))?;
 

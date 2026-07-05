@@ -227,7 +227,11 @@ pub fn jacobi_symbol(a: &BigInt, n: &BigInt) -> i32 {
         a = &a % &n;
     }
 
-    if n == BigInt::one() { t } else { 0 }
+    if n == BigInt::one() {
+        t
+    } else {
+        0
+    }
 }
 
 /// Chinese Remainder Theorem — solves x ≡ a_i (mod m_i) for pairwise coprime m_i.
@@ -236,7 +240,8 @@ pub fn crt(congruences: &[(BigInt, BigInt)]) -> Option<BigInt> {
         return None;
     }
 
-    let product: BigInt = congruences.iter()
+    let product: BigInt = congruences
+        .iter()
         .map(|(_, m)| m.clone())
         .fold(BigInt::one(), |a, b| a * b);
 
@@ -316,12 +321,8 @@ mod tests {
     #[test]
     fn test_is_prime_large() {
         assert!(is_prime(&BigInt::new(97)));
-        assert!(is_prime(
-            &BigInt::from_string("104729").unwrap()
-        )); // 10000th prime
-        assert!(!is_prime(
-            &BigInt::from_string("104729104729").unwrap()
-        ));
+        assert!(is_prime(&BigInt::from_string("104729").unwrap())); // 10000th prime
+        assert!(!is_prime(&BigInt::from_string("104729104729").unwrap()));
     }
 
     #[test]
@@ -368,7 +369,10 @@ mod tests {
     fn test_factorize_product_preserved() {
         // 123456 = 2^6 * 3 * 643
         let factors = factorize(&BigInt::new(123456));
-        let product: BigInt = factors.iter().map(|(p, e)| p.pow(*e)).fold(BigInt::one(), |a, b| a * b);
+        let product: BigInt = factors
+            .iter()
+            .map(|(p, e)| p.pow(*e))
+            .fold(BigInt::one(), |a, b| a * b);
         assert_eq!(product, BigInt::new(123456));
     }
 
@@ -378,7 +382,10 @@ mod tests {
         let q = BigInt::new(101);
         let n = &p * &q;
         let factors = factorize(&n);
-        let product: BigInt = factors.iter().map(|(p, e)| p.pow(*e)).fold(BigInt::one(), |a, b| a * b);
+        let product: BigInt = factors
+            .iter()
+            .map(|(p, e)| p.pow(*e))
+            .fold(BigInt::one(), |a, b| a * b);
         assert_eq!(product, n);
     }
 

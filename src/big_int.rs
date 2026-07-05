@@ -282,7 +282,6 @@ impl BigInt {
         crate::number_theory::is_prime(self)
     }
 
-
     /// Returns (quotient, remainder) of division, where quotient truncates toward zero.
     pub fn div_mod(&self, other: &Self) -> (Self, Self) {
         (self / other, self % other)
@@ -558,7 +557,6 @@ mod tests {
         let result = twenty.factorial().unwrap();
         assert_eq!(result.to_string(), "2432902008176640000"); // 20!
     }
-
 
     #[test]
     fn test_big_int_div_mod() {

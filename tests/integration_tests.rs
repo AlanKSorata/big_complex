@@ -19,8 +19,8 @@ fn test_gcd_euclidean_property() {
     let a = GaussInt::from_i64(36, 48);
     let b = GaussInt::from_i64(12, 16);
     let g = a.gcd(&b);
-    assert!((&a).div_rem(&g).unwrap().1.is_zero());
-    assert!((&b).div_rem(&g).unwrap().1.is_zero());
+    assert!(a.div_rem(&g).unwrap().1.is_zero());
+    assert!(b.div_rem(&g).unwrap().1.is_zero());
 }
 
 #[test]
