@@ -1,7 +1,7 @@
 use crate::BigInt;
 use num_traits::{One, Zero};
 use std::fmt;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 /// A Gaussian integer a + bi where a, b ∈ ℤ (arbitrary precision integers).
 ///
@@ -252,6 +252,82 @@ impl Mul<GaussInt> for &GaussInt {
     }
 }
 
+// --- Division helpers and implementations ---
+
+/// Integer division rounding to nearest, ties away from zero.
+fn round_div(a: &BigInt, b: &BigInt) -> BigInt {
+    let q = a / b;
+    let r = a % b;
+    let two_r = BigInt::new(2) * r.abs();
+    let b_abs = b.abs();
+
+    if two_r > b_abs || two_r == b_abs {
+        // Round away from zero
+        if (a.is_negative() && b.is_negative()) || (!a.is_negative() && !b.is_negative()) {
+            q + BigInt::one()
+        } else {
+            q - BigInt::one()
+        }
+    } else {
+        q
+    }
+}
+
+impl GaussInt {
+    /// Divides this Gaussian integer by `other`, returning `(quotient, remainder)`.
+    /// Returns `None` if `other` is zero.
+    ///
+    /// Guarantees `N(remainder) < N(divisor)` (Euclidean domain property).
+    pub fn div_rem(&self, other: &Self) -> Option<(Self, Self)> {
+        if other.is_zero() {
+            return None;
+        }
+
+        let conj = other.conjugate();
+        let numerator = self * conj; // GaussInt
+        let denominator = other.norm(); // BigInt, always positive
+
+        let q_real = round_div(numerator.real(), &denominator);
+        let q_imag = round_div(numerator.imag(), &denominator);
+        let q = GaussInt::new(q_real, q_imag);
+        let r = self - &q * other;
+
+        Some((q, r))
+    }
+}
+
+impl Div for &GaussInt {
+    type Output = GaussInt;
+
+    fn div(self, other: Self) -> GaussInt {
+        self.div_rem(other).expect("division by zero").0
+    }
+}
+
+impl Div for GaussInt {
+    type Output = GaussInt;
+
+    fn div(self, other: Self) -> GaussInt {
+        self.div_rem(&other).expect("division by zero").0
+    }
+}
+
+impl Rem for &GaussInt {
+    type Output = GaussInt;
+
+    fn rem(self, other: Self) -> GaussInt {
+        self.div_rem(other).expect("division by zero").1
+    }
+}
+
+impl Rem for GaussInt {
+    type Output = GaussInt;
+
+    fn rem(self, other: Self) -> GaussInt {
+        self.div_rem(&other).expect("division by zero").1
+    }
+}
+
 impl fmt::Display for GaussInt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.imag.is_zero() {
@@ -368,5 +444,108 @@ mod tests {
         let product = GaussInt::new(z.real().clone(), z.imag().clone()) * z.conjugate();
         assert!(product.is_real());
         assert_eq!(product.real, BigInt::new(25));
+    }
+
+    #[test]
+    fn test_gauss_int_div_exact() {
+        // (3+4i) / (1+2i):
+        // (3+4i)(1-2i)/5 = (3-6i+4i+8)/5 = (11-2i)/5 = 2.2 - 0.4i
+        // q = 2+0i, r = (3+4i) - 2*(1+2i) = 3+4i-2-4i = 1+0i
+        // N(r) = 1 < N(b) = 5
+        let a = GaussInt::from_i64(3, 4);
+        let b = GaussInt::from_i64(1, 2);
+        let (q, r) = a.div_rem(&b).unwrap();
+        assert_eq!(q, GaussInt::from_i64(2, 0));
+        assert!(r.norm() < b.norm());
+        assert_eq!(&q * &b + &r, a);
+    }
+
+    #[test]
+    fn test_gauss_int_div_different_quadrants() {
+        // (-3+4i) / (1-2i):
+        // (-3+4i)(1+2i)/5 = (-3-6i+4i-8)/5 = (-11-2i)/5 = -2.2 - 0.4i
+        // q = -2+0i
+        // r = (-3+4i) - (-2)*(1-2i) = -3+4i+2-4i = -1+0i
+        // N(r)=1 < N(b)=5
+        let a = GaussInt::from_i64(-3, 4);
+        let b = GaussInt::from_i64(1, -2);
+        let (q, r) = a.div_rem(&b).unwrap();
+        assert!(r.norm() < b.norm(), "N(r)={} >= N(b)={}", r.norm(), b.norm());
+        assert_eq!(&q * &b + &r, a);
+    }
+
+    #[test]
+    fn test_gauss_int_div_by_unit() {
+        // (5+7i) / i: multiply by conj(i)/N(i) = -i/1 = -i
+        // (5+7i)*(-i) = -5i -7i² = 7 - 5i
+        let a = GaussInt::from_i64(5, 7);
+        let i = GaussInt::from_i64(0, 1);
+        let (q, r) = a.div_rem(&i).unwrap();
+        assert_eq!(q, GaussInt::from_i64(7, -5));
+        assert!(r.is_zero());
+    }
+
+    #[test]
+    fn test_gauss_int_div_zero_returns_none() {
+        let a = GaussInt::from_i64(1, 1);
+        let zero = GaussInt::zero();
+        assert!(a.div_rem(&zero).is_none());
+    }
+
+    #[test]
+    fn test_gauss_int_div_trait() {
+        // Just test that the Div trait works
+        let a = GaussInt::from_i64(10, 0);
+        let b = GaussInt::from_i64(3, 0);
+        let q = a / b;
+        // 10/3 -> round_div: 10/3=3 rem 1, 2*1=2 <= 3 -> q=3
+        assert_eq!(q, GaussInt::from_i64(3, 0));
+    }
+
+    #[test]
+    fn test_gauss_int_rem_trait() {
+        let a = GaussInt::from_i64(10, 0);
+        let b = GaussInt::from_i64(3, 0);
+        let r = a % b;
+        assert_eq!(r, GaussInt::from_i64(1, 0));
+    }
+
+    #[test]
+    fn test_gauss_int_div_rem_euclidean_property() {
+        let cases = vec![
+            (GaussInt::from_i64(100, 0), GaussInt::from_i64(7, 0)),
+            (GaussInt::from_i64(0, 100), GaussInt::from_i64(0, 7)),
+            (GaussInt::from_i64(-100, -100), GaussInt::from_i64(3, 4)),
+            (GaussInt::from_i64(1, 1), GaussInt::from_i64(1, 1)),
+            (GaussInt::from_i64(7, 5), GaussInt::from_i64(1, 2)),
+            (GaussInt::from_i64(-3, -4), GaussInt::from_i64(2, 0)),
+        ];
+        for (a, b) in cases {
+            let (q, r) = a.clone().div_rem(&b).unwrap();
+            assert!(r.norm() < b.norm(),
+                "N({}) = {} >= N({}) = {} for a={}, b={}", r, r.norm(), b, b.norm(), a, b);
+            assert_eq!(&q * &b + &r, a,
+                "a = q*b + r failed: {} != {}*{} + {}", a, q, b, r);
+        }
+    }
+
+    #[test]
+    fn test_round_div_negative() {
+        // -11/5 = -2.2 -> round to -2
+        assert_eq!(round_div(&BigInt::new(-11), &BigInt::new(5)), BigInt::new(-2));
+        // -13/5 = -2.6 -> round to -3
+        assert_eq!(round_div(&BigInt::new(-13), &BigInt::new(5)), BigInt::new(-3));
+        // 11/5 = 2.2 -> round to 2
+        assert_eq!(round_div(&BigInt::new(11), &BigInt::new(5)), BigInt::new(2));
+        // 13/5 = 2.6 -> round to 3
+        assert_eq!(round_div(&BigInt::new(13), &BigInt::new(5)), BigInt::new(3));
+        // -11/(-5) = 2.2 -> round to 2
+        assert_eq!(round_div(&BigInt::new(-11), &BigInt::new(-5)), BigInt::new(2));
+        // -13/(-5) = 2.6 -> round to 3
+        assert_eq!(round_div(&BigInt::new(-13), &BigInt::new(-5)), BigInt::new(3));
+        // 5/2 = 2.5 (tie) -> round to 3
+        assert_eq!(round_div(&BigInt::new(5), &BigInt::new(2)), BigInt::new(3));
+        // -5/2 = -2.5 (tie) -> round to -3
+        assert_eq!(round_div(&BigInt::new(-5), &BigInt::new(2)), BigInt::new(-3));
     }
 }
