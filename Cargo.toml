@@ -5,6 +5,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Gaussian integer arithmetic and number theory utilities"
 repository = "https://github.com/AlanKSorata/big_complex"
+keywords = ["gaussian-integer", "complex-numbers", "number-theory", "primality-test", "bigint"]
+categories = ["algorithms", "mathematics", "science"]
 
 [[bin]]
 name = "gauss"
