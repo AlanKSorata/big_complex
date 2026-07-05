@@ -105,6 +105,88 @@ fn miller_rabin_test(n: &BigInt, a: &BigInt) -> bool {
     false
 }
 
+const SMALL_PRIMES: &[i64] = &[
+    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+];
+
+/// Returns the prime factorization of n as (prime, exponent) pairs.
+///
+/// Uses trial division by small primes followed by Pollard's Rho
+/// for any remaining large factors.
+pub fn factorize(n: &BigInt) -> Vec<(BigInt, u32)> {
+    if n <= &BigInt::one() {
+        return vec![];
+    }
+
+    let mut n = n.clone();
+    let mut factors: Vec<BigInt> = vec![];
+
+    // Trial division by small primes
+    for p in SMALL_PRIMES {
+        let p_big = BigInt::new(*p);
+        while (&n % &p_big).is_zero() {
+            factors.push(p_big.clone());
+            n = &n / &p_big;
+        }
+    }
+
+    // Pollard's Rho for the remaining factor
+    if n > BigInt::one() {
+        factor_rho(&n, &mut factors);
+    }
+
+    // Sort and count exponents
+    factors.sort();
+    let mut result: Vec<(BigInt, u32)> = vec![];
+    for f in factors {
+        match result.last_mut() {
+            Some((p, count)) if p == &f => *count += 1,
+            _ => result.push((f, 1)),
+        }
+    }
+    result
+}
+
+/// Pollard's Rho factorization algorithm.
+fn factor_rho(n: &BigInt, factors: &mut Vec<BigInt>) {
+    if n <= &BigInt::one() {
+        return;
+    }
+    if is_prime(n) {
+        factors.push(n.clone());
+        return;
+    }
+
+    // Try different c values for f(x) = x² + c
+    let mut c = BigInt::one();
+    loop {
+        let mut x = BigInt::new(2);
+        let mut y = BigInt::new(2);
+        let mut d = BigInt::one();
+
+        while d == BigInt::one() {
+            x = pollard_f(&x, n, &c);
+            y = pollard_f(&pollard_f(&y, n, &c), n, &c);
+            let diff = (&x - &y).abs();
+            d = diff.gcd(n);
+        }
+
+        if d != *n {
+            factor_rho(&d, factors);
+            factor_rho(&(n / &d), factors);
+            return;
+        }
+
+        c = c + BigInt::one();
+    }
+}
+
+/// f(x) = x² + c (mod n)
+fn pollard_f(x: &BigInt, n: &BigInt, c: &BigInt) -> BigInt {
+    let xx = x * x + c.clone();
+    &xx % n
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -146,5 +228,47 @@ mod tests {
     #[test]
     fn test_is_prime_even_composite() {
         assert!(!is_prime(&BigInt::new(1000000)));
+    }
+
+    #[test]
+    fn test_factorize_small_primes() {
+        let factors = factorize(&BigInt::new(97));
+        assert_eq!(factors, vec![(BigInt::new(97), 1)]);
+    }
+
+    #[test]
+    fn test_factorize_power_of_two() {
+        let factors = factorize(&BigInt::new(64));
+        assert_eq!(factors, vec![(BigInt::new(2), 6)]);
+    }
+
+    #[test]
+    fn test_factorize_composite() {
+        let factors = factorize(&BigInt::new(12));
+        assert_eq!(factors, vec![(BigInt::new(2), 2), (BigInt::new(3), 1)]);
+    }
+
+    #[test]
+    fn test_factorize_zero_and_one() {
+        assert!(factorize(&BigInt::new(0)).is_empty());
+        assert!(factorize(&BigInt::new(1)).is_empty());
+    }
+
+    #[test]
+    fn test_factorize_product_preserved() {
+        // 123456 = 2^6 * 3 * 643
+        let factors = factorize(&BigInt::new(123456));
+        let product: BigInt = factors.iter().map(|(p, e)| p.pow(*e)).fold(BigInt::one(), |a, b| a * b);
+        assert_eq!(product, BigInt::new(123456));
+    }
+
+    #[test]
+    fn test_factorize_semiprime() {
+        let p = BigInt::new(97);
+        let q = BigInt::new(101);
+        let n = &p * &q;
+        let factors = factorize(&n);
+        let product: BigInt = factors.iter().map(|(p, e)| p.pow(*e)).fold(BigInt::one(), |a, b| a * b);
+        assert_eq!(product, n);
     }
 }
