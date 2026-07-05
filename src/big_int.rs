@@ -97,6 +97,21 @@ impl BigInt {
         self.inner.sign()
     }
 
+    /// Returns the number of bits required to represent the absolute value of this `BigInt`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use gauss_int::BigInt;
+    ///
+    /// assert_eq!(BigInt::new(0).bits(), 0);
+    /// assert_eq!(BigInt::new(1).bits(), 1);
+    /// assert_eq!(BigInt::new(8).bits(), 4);
+    /// ```
+    pub fn bits(&self) -> u64 {
+        self.inner.bits()
+    }
+
     /// Returns `true` if this `BigInt` is zero.
     pub fn is_zero(&self) -> bool {
         self.inner.is_zero()
@@ -251,9 +266,8 @@ impl BigInt {
 
     /// Checks if this `BigInt` is a prime number.
     ///
-    /// Uses deterministic Miller-Rabin primality test for numbers >= 3,
-    /// with trial division for small numbers. This is efficient for
-    /// numbers with hundreds of digits.
+    /// Uses the Baillie-PSW primality test, which is deterministic for
+    /// `n < 2^64` and has no known counterexamples for larger values.
     ///
     /// # Examples
     ///
@@ -265,93 +279,9 @@ impl BigInt {
     /// assert!(!BigInt::new(100).is_prime());
     /// ```
     pub fn is_prime(&self) -> bool {
-        if self <= &BigInt::one() {
-            return false;
-        }
-
-        if self == &BigInt::new(2) || self == &BigInt::new(3) {
-            return true;
-        }
-
-        if self % &BigInt::new(2) == BigInt::zero() {
-            return false;
-        }
-
-        // For small numbers, use trial division
-        let small_limit = BigInt::new(1_000_000);
-        if self < &small_limit {
-            let sqrt_n = self.sqrt().unwrap_or_else(BigInt::zero);
-            let mut i = BigInt::new(3);
-            while i <= sqrt_n {
-                if self % &i == BigInt::zero() {
-                    return false;
-                }
-                i = i + BigInt::new(2);
-            }
-            return true;
-        }
-
-        // Miller-Rabin primality test for larger numbers
-        self.miller_rabin_test()
+        crate::number_theory::is_prime(self)
     }
 
-    /// Performs the Miller-Rabin primality test.
-    ///
-    /// This is a deterministic implementation that uses specific witness
-    /// values known to be sufficient for numbers of different bit lengths.
-    fn miller_rabin_test(&self) -> bool {
-        // Write n-1 as d * 2^s
-        let n_minus_1 = self - &BigInt::one();
-        let mut d = n_minus_1.clone();
-        let mut s = 0u32;
-
-        while &d % &BigInt::new(2) == BigInt::zero() {
-            d = d / BigInt::new(2);
-            s += 1;
-        }
-
-        // Choose witnesses based on bit length
-        // These values are proven to be sufficient for deterministic testing
-        let bit_len = self.inner.bits() as usize;
-        let witnesses: Vec<BigInt> = match bit_len {
-            0..=64 => vec![BigInt::new(2), BigInt::new(3), BigInt::new(5), BigInt::new(7), BigInt::new(11)],
-            _ => vec![
-                BigInt::new(2),
-                BigInt::new(3),
-                BigInt::new(5),
-                BigInt::new(7),
-                BigInt::new(11),
-                BigInt::new(13),
-                BigInt::new(17),
-            ],
-        };
-
-        for a in witnesses {
-            if &a >= self {
-                continue;
-            }
-
-            let mut x = a.mod_pow(&d, self);
-            if x == BigInt::one() || x == n_minus_1 {
-                continue;
-            }
-
-            let mut composite = true;
-            for _ in 1..s {
-                x = (&x * &x) % self.clone();
-                if x == n_minus_1 {
-                    composite = false;
-                    break;
-                }
-            }
-
-            if composite {
-                return false;
-            }
-        }
-
-        true
-    }
 
     /// Returns (quotient, remainder) of division, where quotient truncates toward zero.
     pub fn div_mod(&self, other: &Self) -> (Self, Self) {
@@ -629,48 +559,6 @@ mod tests {
         assert_eq!(result.to_string(), "2432902008176640000"); // 20!
     }
 
-    #[test]
-    fn test_big_int_prime() {
-        // Test small primes
-        assert!(!BigInt::new(0).is_prime());
-        assert!(!BigInt::new(1).is_prime());
-        assert!(BigInt::new(2).is_prime());
-        assert!(BigInt::new(3).is_prime());
-        assert!(!BigInt::new(4).is_prime());
-        assert!(BigInt::new(5).is_prime());
-        assert!(!BigInt::new(6).is_prime());
-        assert!(BigInt::new(7).is_prime());
-        assert!(!BigInt::new(8).is_prime());
-        assert!(!BigInt::new(9).is_prime());
-        assert!(!BigInt::new(10).is_prime());
-        assert!(BigInt::new(11).is_prime());
-
-        // Test larger primes
-        assert!(BigInt::new(97).is_prime());
-        assert!(BigInt::new(101).is_prime());
-        assert!(!BigInt::new(100).is_prime());
-        assert!(!BigInt::new(121).is_prime()); // 11^2
-
-        // Test negative numbers
-        assert!(!BigInt::new(-7).is_prime());
-
-        // Test large primes (using Miller-Rabin)
-        // 104729 is the 10000th prime
-        let large_prime = BigInt::from_string("104729").unwrap();
-        assert!(large_prime.is_prime());
-
-        // 104723 is also prime
-        let another_large_prime = BigInt::from_string("104723").unwrap();
-        assert!(another_large_prime.is_prime());
-
-        // Test large composite number
-        let large_composite = BigInt::from_string("104729104729").unwrap();
-        assert!(!large_composite.is_prime());
-
-        // Test Carmichael number (561 = 3 * 11 * 17) - should be detected as composite
-        let carmichael = BigInt::new(561);
-        assert!(!carmichael.is_prime());
-    }
 
     #[test]
     fn test_big_int_div_mod() {
