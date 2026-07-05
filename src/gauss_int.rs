@@ -347,6 +347,50 @@ impl fmt::Display for GaussInt {
     }
 }
 
+// --- Canonicalize and GCD ---
+
+impl GaussInt {
+    /// Returns the canonical associate of this Gaussian integer:
+    /// the one in the first quadrant (real > 0, or real == 0 and imag > 0).
+    fn canonicalize(&self) -> Self {
+        if self.is_zero() {
+            return self.clone();
+        }
+        let i = GaussInt::from_i64(0, 1);
+        let units = [GaussInt::one(), -GaussInt::one(), i.clone(), -i];
+        let mut best = &units[0] * self;
+        for u in &units[1..] {
+            let candidate = u * self;
+            let real_pos = candidate.real().is_positive();
+            let real_zero_imag_pos =
+                candidate.real().is_zero() && candidate.imag().is_positive();
+            let best_real_pos = best.real().is_positive();
+            let best_real_zero_imag_pos =
+                best.real().is_zero() && best.imag().is_positive();
+            if (real_pos || real_zero_imag_pos) && !(best_real_pos || best_real_zero_imag_pos) {
+                best = candidate;
+            }
+        }
+        best
+    }
+
+    /// Computes the greatest common divisor using the Euclidean algorithm.
+    ///
+    /// Returns the canonical GCD (first quadrant).
+    pub fn gcd(&self, other: &Self) -> Self {
+        let mut a = self.clone();
+        let mut b = other.clone();
+
+        while !b.is_zero() {
+            let r = (&a).div_rem(&b).unwrap().1;
+            a = b;
+            b = r;
+        }
+
+        a.canonicalize()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -547,5 +591,50 @@ mod tests {
         assert_eq!(round_div(&BigInt::new(5), &BigInt::new(2)), BigInt::new(3));
         // -5/2 = -2.5 (tie) -> round to -3
         assert_eq!(round_div(&BigInt::new(-5), &BigInt::new(2)), BigInt::new(-3));
+    }
+
+    #[test]
+    fn test_gauss_int_gcd_coprime() {
+        // 3+4i and 3-4i should be coprime (gcd is a unit)
+        let a = GaussInt::from_i64(3, 4);
+        let b = GaussInt::from_i64(3, -4);
+        let g = a.gcd(&b);
+        assert!(g.is_unit(), "gcd({}, {}) = {} should be a unit", a, b, g);
+    }
+
+    #[test]
+    fn test_gauss_int_gcd_shared_factor() {
+        // gcd(6+8i, 3+4i) should be an associate of 3+4i
+        let a = GaussInt::from_i64(6, 8);
+        let b = GaussInt::from_i64(3, 4);
+        let g = a.gcd(&b);
+        assert_eq!(g.norm(), BigInt::new(25));
+    }
+
+    #[test]
+    fn test_gauss_int_gcd_with_zero() {
+        let a = GaussInt::from_i64(3, 4);
+        let zero = GaussInt::zero();
+        let g = a.gcd(&zero);
+        // gcd(a, 0) = |a| (in canonical form)
+        assert_eq!(g.norm(), a.norm());
+    }
+
+    #[test]
+    fn test_gauss_int_gcd_commutative() {
+        let a = GaussInt::from_i64(12, 18);
+        let b = GaussInt::from_i64(6, 8);
+        assert_eq!(a.gcd(&b).norm(), b.gcd(&a).norm());
+    }
+
+    #[test]
+    fn test_gauss_int_gcd_divides_both() {
+        let a = GaussInt::from_i64(15, 10);
+        let b = GaussInt::from_i64(5, 5);
+        let g = a.gcd(&b);
+        // gcd should divide both a and b
+        assert!(!g.is_zero());
+        assert!((&a).div_rem(&g).unwrap().1.is_zero(), "gcd should divide a");
+        assert!((&b).div_rem(&g).unwrap().1.is_zero(), "gcd should divide b");
     }
 }
