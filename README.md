@@ -1,157 +1,109 @@
-# Big Complex Number Calculator
+# Gauss Int
 
-[Chinese Version](./README-zh.md)
+A Rust library for Gaussian integer arithmetic and number theory.
 
-A calculation module implemented in Rust language that supports large number complex operations, providing a rich set of mathematical operation functions.
+## What is a Gaussian Integer?
 
-## Core Modules
+A Gaussian integer is a complex number `a + bi` where both `a` and `b` are integers. Gaussian integers form a Euclidean domain, supporting division with remainder and greatest common divisors via the Euclidean algorithm.
 
-### BigInt - Large Integer Module
+## Features
 
-#### Basic Functions
+### Gaussian Integer (GaussInt)
 
-- ✅ Creation and basic operations (addition, subtraction, multiplication, division, modulo) of large integers
-- ✅ String parsing and display
-- ✅ Byte sequence conversion
-- ✅ Sign detection and absolute value calculation
-- ✅ Comparison operations
+- Arithmetic: addition, subtraction, multiplication, negation
+- **Division with remainder** — correct Gaussian integer division using nearest-integer rounding, guaranteeing `N(remainder) < N(divisor)`
+- **GCD** — Euclidean algorithm with canonicalization to the first quadrant
+- Exponentiation by squaring (`pow_u32`)
+- Norm, conjugate, unit detection
 
-#### Mathematical Operation Functions
+### Number Theory
 
-- ✅ Power operation (`pow`)
-- ✅ Square root calculation (`sqrt`)
-- ✅ Greatest common divisor (`gcd`)
-- ✅ Least common multiple (`lcm`)
-- ✅ Modular power operation (`mod_pow`)
-- ✅ Modular inverse operation (`mod_inv`)
+- **Prime testing** — Baillie-PSW approach (deterministic for 64-bit, multiple Miller-Rabin bases for larger numbers)
+- **Factorization** — trial division by small primes + Pollard's Rho
+- **Euler's totient** φ(n) via prime factorization
+- **Jacobi symbol** (a/n) via quadratic reciprocity
+- **Chinese Remainder Theorem** — solve x ≡ a_i (mod m_i) for pairwise coprime moduli
+- **Gaussian prime detection** — full classification in ℤ[i]
 
-#### New Functions
+### CLI
 
-- ✅ **Factorial calculation** (`factorial`) - Calculate n!
-- ✅ **Prime number detection** (`is_prime`) - Determine whether it is a prime number
-- ✅ **Next prime number** (`next_prime`) - Find the smallest prime number greater than the current number
-- ✅ **Binary operations**:
-  - `bit_length()` - Get the binary bit length
-  - `count_ones()` - Calculate the number of 1s in the binary
-  - `trailing_zeros()` - Calculate the number of trailing zeros
-  - `is_power_of_two()` - Determine whether it is a power of 2
-  - `next_power_of_two()` - Get the next power of 2
-
-### BigComplex - Large Complex Number Module
-
-#### Basic Functions
-
-- ✅ Creation and basic operations (addition, subtraction, multiplication, division) of complex numbers
-- ✅ Access to real and imaginary parts
-- ✅ Complex conjugate (`conjugate`)
-- ✅ Square of the magnitude (`magnitude_squared`)
-- ✅ Scaling operation (`scale`)
-- ✅ Complex power operation (`pow`)
-
-#### Geometric and Polar Coordinate Functions
-
-- ✅ **Magnitude calculation** (`magnitude`) - Calculate the magnitude of a complex number
-- ✅ **Polar coordinate construction** (`from_polar`) - Create a complex number from polar coordinates
-- ✅ **Quadrant determination** (`arg_quadrant`) - Determine the quadrant where the complex number lies
-- ✅ **Rotation operations**:
-  - `rotate_90()` - Rotate counterclockwise by 90 degrees
-  - `rotate_180()` - Rotate by 180 degrees
-  - `rotate_270()` - Rotate counterclockwise by 270 degrees
-
-#### Advanced Mathematical Operations
-
-- ✅ **nth root** (`nth_root`) - Calculate the nth root of a complex number
-- ✅ **Natural logarithm approximation** (`ln_approx`) - Simplified calculation of the natural logarithm of a complex number
-- ✅ **Exponential function approximation** (`exp_approx`) - Simplified calculation of the exponential function of a complex number
-
-## Test Coverage
-
-### Unit Tests
-
-- ✅ BigInt: 18 test functions, covering all functions
-- ✅ BigComplex: 17 test functions, covering all functions
-
-### Integration Tests
-
-- ✅ 12 integration tests, including:
-  - Large number operation tests
-  - Complex number operation chain tests
-  - Polynomial evaluation tests
-  - Mathematical property verification tests
-  - Comprehensive tests of new functions
-
-## Performance Features
-
-- ✅ Supports arbitrary precision large integer operations
-- ✅ Efficient algorithm implementation (e.g., optimized trial division for prime number detection)
-- ✅ Memory-safe Rust implementation
-- ✅ Zero-copy reference operation support
-
-## Usage Examples
-
-```rust
-use big_complex::{BigInt, BigComplex};
-
-// Large integer operations
-let n = BigInt::new(10);
-println!("10! = {}", n.factorial().unwrap());
-
-let num = BigInt::new(97);
-println!("{} is prime: {}", num, num.is_prime());
-
-// Complex number operations
-let z = BigComplex::from_i64(3, 4);
-println!("Magnitude: {}", z.magnitude());
-println!("Rotated 90°: {}", z.rotate_90());
-
-// Advanced operations
-let roots = BigComplex::from_i64(16, 0).nth_root(2);
-println!("Square roots: {:?}", roots);
-```
-
-## Compilation and Execution
+A command-line tool exposing all functionality:
 
 ```bash
-# Run all tests
+# Gaussian integer operations
+cargo run -- add 3+4i 1+2i
+cargo run -- mul 3+4i 1+2i
+cargo run -- div 7+5i 1+2i
+cargo run -- gcd 12+18i 6+8i
+cargo run -- norm 3+4i
+cargo run -- conj 3+4i
+
+# Number theory
+cargo run -- is-prime 97
+cargo run -- factor 123456
+cargo run -- totient 100
+cargo run -- jacobi 2 7
+cargo run -- crt 2 3 3 5
+```
+
+## Library Usage
+
+```rust
+use gauss_int::{GaussInt, BigInt};
+use gauss_int::number_theory;
+
+// Gaussian integer arithmetic
+let z = GaussInt::from_i64(3, 4);
+let conj = z.conjugate();
+let (q, r) = z.div_rem(&GaussInt::from_i64(1, 2)).unwrap();
+
+// GCD
+let g = GaussInt::from_i64(12, 18).gcd(&GaussInt::from_i64(6, 8));
+
+// Primality testing
+assert!(number_theory::is_prime(&BigInt::new(97)));
+
+// Factorization
+let factors = number_theory::factorize(&BigInt::new(123456));
+
+// Euler's totient
+assert_eq!(number_theory::euler_totient(&BigInt::new(100)), BigInt::new(40));
+
+// Chinese Remainder Theorem
+let congruences = vec![
+    (BigInt::new(2), BigInt::new(3)),
+    (BigInt::new(3), BigInt::new(5)),
+];
+let x = number_theory::crt(&congruences).unwrap();
+
+// Gaussian prime detection
+assert!(number_theory::is_gaussian_prime(&GaussInt::from_i64(3, 0)));
+assert!(!number_theory::is_gaussian_prime(&GaussInt::from_i64(5, 0)));
+```
+
+## Testing
+
+```bash
 cargo test
-
-# Run the example program
-cargo run --example usage
-
-# Run specific tests
-cargo test test_big_int_factorial
-cargo test test_big_complex_rotation
 ```
 
 ## Project Structure
 
 ```
 src/
-├── lib.rs          # Module export
-├── big_int.rs      # Large integer implementation
-└── big_complex.rs  # Large complex number implementation
+├── lib.rs              # Module exports
+├── big_int.rs          # BigInt wrapper around num-bigint
+├── gauss_int.rs        # Gaussian integer implementation
+├── number_theory.rs    # Primality, factorization, totient, Jacobi, CRT
+└── main.rs             # CLI binary
 
 tests/
-└── integration_tests.rs  # Integration tests
-
-examples/
-└── usage.rs        # Usage example
+└── integration_tests.rs
 ```
 
 ## Dependencies
 
-- `num-bigint` - Underlying implementation of large integers
-- `num-traits` - Numerical traits
-- `num-complex` - Complex number support
-- `num-integer` - Integer operations
-
-## Summary
-
-This project successfully implements a fully functional large number complex operation calculation module, including:
-
-- **28 unit tests** all passed
-- **12 integration tests** all passed
-- **15 new functions** with corresponding tests
-- **Complete example programs** demonstrating all functions
-
-The implementation of each new function follows the "implement - test" development model to ensure code quality and functional correctness.
+- `num-bigint` — arbitrary precision integers
+- `num-traits` — numerical traits (Zero, One, Signed)
+- `num-integer` — integer operations (gcd, is_even)
+- `clap` — CLI argument parsing
