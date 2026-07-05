@@ -3,7 +3,7 @@
 //! Provides industrial-strength primality testing (Baillie-PSW),
 //! and other number-theoretic utilities.
 
-use crate::BigInt;
+use crate::{BigInt, GaussInt};
 use num_traits::{One, Zero};
 
 /// Deterministic primality test using the Baillie-PSW approach.
@@ -253,6 +253,50 @@ pub fn crt(congruences: &[(BigInt, BigInt)]) -> Option<BigInt> {
     Some(&result % &product)
 }
 
+/// Tests whether a Gaussian integer is prime in Z[i].
+///
+/// A Gaussian integer a+bi is prime iff:
+/// - a != 0 and b != 0, and N(a+bi) is a rational prime, OR
+/// - one component is zero and the other is a rational prime p ≡ 3 (mod 4)
+///
+/// # Examples
+///
+/// ```
+/// use gauss_int::{GaussInt, number_theory::is_gaussian_prime};
+///
+/// assert!(is_gaussian_prime(&GaussInt::from_i64(1, 1)));   // N=2 is prime
+/// assert!(is_gaussian_prime(&GaussInt::from_i64(3, 0)));   // 3 ≡ 3 mod 4
+/// assert!(is_gaussian_prime(&GaussInt::from_i64(2, 1)));   // N=5 is prime
+/// assert!(!is_gaussian_prime(&GaussInt::from_i64(5, 0)));  // 5 ≡ 1 mod 4
+/// ```
+pub fn is_gaussian_prime(z: &GaussInt) -> bool {
+    if z.is_zero() || z.is_unit() {
+        return false;
+    }
+
+    let (a, b) = (z.real(), z.imag());
+
+    if b.is_zero() {
+        // On the real axis: |a| must be a rational prime ≡ 3 (mod 4)
+        let abs_a = a.abs();
+        if !is_prime(&abs_a) {
+            return false;
+        }
+        &abs_a % &BigInt::new(4) == BigInt::new(3)
+    } else if a.is_zero() {
+        // On the imaginary axis: same condition for |b|
+        let abs_b = b.abs();
+        if !is_prime(&abs_b) {
+            return false;
+        }
+        &abs_b % &BigInt::new(4) == BigInt::new(3)
+    } else {
+        // Off-axis: N(a+bi) must be a rational prime
+        let n = z.norm();
+        is_prime(&n)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -382,5 +426,50 @@ mod tests {
         let congruences = vec![(BigInt::new(5), BigInt::new(7))];
         let x = crt(&congruences).unwrap();
         assert_eq!(&x % &BigInt::new(7), BigInt::new(5));
+    }
+
+    #[test]
+    fn test_gaussian_prime_integer_primes() {
+        // Primes p ≡ 3 mod 4 are Gaussian primes
+        assert!(is_gaussian_prime(&GaussInt::from_i64(3, 0)));
+        assert!(is_gaussian_prime(&GaussInt::from_i64(7, 0)));
+        assert!(is_gaussian_prime(&GaussInt::from_i64(-3, 0)));
+        // Primes p ≡ 1 mod 4 are NOT Gaussian primes
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(5, 0)));
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(13, 0)));
+    }
+
+    #[test]
+    fn test_gaussian_prime_off_axis() {
+        // (1+i) has N=2 → prime
+        assert!(is_gaussian_prime(&GaussInt::from_i64(1, 1)));
+        // (2+i) has N=5 → prime (5 is prime)
+        assert!(is_gaussian_prime(&GaussInt::from_i64(2, 1)));
+        // (2+2i) has N=8 → not prime
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(2, 2)));
+    }
+
+    #[test]
+    fn test_gaussian_prime_imaginary_axis() {
+        // 3i → |3| = 3 ≡ 3 mod 4 → prime
+        assert!(is_gaussian_prime(&GaussInt::from_i64(0, 3)));
+        // 5i → |5| = 5 ≡ 1 mod 4 → not prime
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(0, 5)));
+    }
+
+    #[test]
+    fn test_gaussian_prime_units_and_zero() {
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(0, 0)));
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(1, 0)));
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(0, 1)));
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(-1, 0)));
+    }
+
+    #[test]
+    fn test_gaussian_prime_composite() {
+        // 2 = (1+i)(1-i) → not a Gaussian prime
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(2, 0)));
+        // 10 = (3+i)(3-i) → not prime
+        assert!(!is_gaussian_prime(&GaussInt::from_i64(10, 0)));
     }
 }
